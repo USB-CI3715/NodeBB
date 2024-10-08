@@ -1,7 +1,5 @@
 'use strict';
 
-@typescript-eslint/no-unsafe-member-access,
-@typescript-eslint/no-unsafe-call
 import * as meta from '../meta';
 import * as user from '../user';
 import * as plugins from '../plugins';
