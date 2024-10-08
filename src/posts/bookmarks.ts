@@ -1,18 +1,25 @@
 'use strict';
+//Switching 'require' to 'import'
 
-const db = require('../database');
-const plugins = require('../plugins');
+import db from '../database';
+import plugins from '../plugins';
+//const db = require('../database');
+//const plugins = require('../plugins');
 
-module.exports = function (Posts) {
-	Posts.bookmark = async function (pid, uid) {
-		return await toggleBookmark('bookmark', pid, uid);
+export default class Posts {
+//module.exports = function (Posts) {
+	public static async bookmark(pid: number, uid: number): Promise<any> {
+	//Posts.bookmark = async function (pid, uid) {
+		return await this.toggleBookmark('bookmark', pid, uid);
 	};
 
-	Posts.unbookmark = async function (pid, uid) {
-		return await toggleBookmark('unbookmark', pid, uid);
+	public static async unbookmark(pid: number, uid: number): Promise<any> {
+	//Posts.unbookmark = async function (pid, uid) {
+		return await this.toggleBookmark('unbookmark', pid, uid);
 	};
 
-	async function toggleBookmark(type, pid, uid) {
+	private static async toggleBookmark(type: string, pid: number, uid: number): Promise<any> {
+	//async function toggleBookmark(type, pid, uid) {
 		if (parseInt(uid, 10) <= 0) {
 			throw new Error('[[error:not-logged-in]]');
 		}
@@ -54,7 +61,8 @@ module.exports = function (Posts) {
 		};
 	}
 
-	Posts.hasBookmarked = async function (pid, uid) {
+	public static async hasBookmarked(pid: number, uid: number): Promise<any> {
+	//Posts.hasBookmarked = async function (pid, uid) {
 		if (parseInt(uid, 10) <= 0) {
 			return Array.isArray(pid) ? pid.map(() => false) : false;
 		}
