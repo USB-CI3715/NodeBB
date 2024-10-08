@@ -1,10 +1,21 @@
 'use strict';
 //Switching 'require' to 'import'
-
 import db from '../database';
 import plugins from '../plugins';
 //const db = require('../database');
 //const plugins = require('../plugins');
+
+//Creating interfaces for complex types
+interface PostData{
+	pid: number;
+	uid: number;
+	bookmarks?: number;
+}
+
+interface BookmarkStatus {
+	post: PostData;
+	isBookmarked: boolean;
+}
 
 export default class Posts {
 //module.exports = function (Posts) {
@@ -18,7 +29,7 @@ export default class Posts {
 		return await this.toggleBookmark('unbookmark', pid, uid);
 	};
 
-	private static async toggleBookmark(type: string, pid: number, uid: number): Promise<any> {
+	private static async toggleBookmark(type: string, pid: number, uid: number): Promise<BookmarkStatus> {
 	//async function toggleBookmark(type, pid, uid) {
 		if (parseInt(uid, 10) <= 0) {
 			throw new Error('[[error:not-logged-in]]');
@@ -26,10 +37,14 @@ export default class Posts {
 
 		const isBookmarking = type === 'bookmark';
 
+		const postData: PostData = await Posts.getPostFields(pid, ['pid', 'uid']);
+		const hasBookmarked: boolean = await Posts.hasBookmarked(pid, uid);
+		/*
 		const [postData, hasBookmarked] = await Promise.all([
 			Posts.getPostFields(pid, ['pid', 'uid']),
 			Posts.hasBookmarked(pid, uid),
 		]);
+*/
 
 		if (isBookmarking && hasBookmarked) {
 			throw new Error('[[error:already-bookmarked]]');
