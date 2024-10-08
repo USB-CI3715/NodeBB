@@ -68,3 +68,38 @@ export const processSortedSet = async function (setKey: string, process: Functio
 		stop = start + options.batch - 1;  
     }  
 };
+
+export const processArray = async function (array: any[], process: Function, options: any): Promise<void> {
+    options = options || {};
+
+    if (!Array.isArray(array) || !array.length) {
+        return;
+    }
+    if (typeof process !== 'function') {
+        throw new Error('[[error:process-not-a-function]]');
+    }
+    
+    const batch: number = options.batch || DEFAULT_BATCH_SIZE;
+    let start: number = 0;
+    if (process && process.constructor && process.constructor.name !== 'AsyncFunction') {
+        process = promisify(process);
+    }
+    let iteration: number = 1;
+    while (true) {
+        const currentBatch: any[] = array.slice(start, start + batch);
+
+        if (!currentBatch.length) {
+            return;
+        }
+        if (iteration > 1 && options.interval) {
+            await sleep(options.interval);
+        }
+        await process(currentBatch);
+        
+        start += batch;
+        iteration += 1;
+    }  
+};
+
+require('./promisify')(exports);
+
