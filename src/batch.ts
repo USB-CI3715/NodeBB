@@ -1,4 +1,3 @@
-
 'use strict';
 
 import * as util from 'util';
@@ -102,4 +101,3 @@ export const processArray = async function (array: any[], process: Function, opt
 };
 
 require('./promisify')(exports);
-
