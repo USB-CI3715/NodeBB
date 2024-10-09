@@ -1,96 +1,85 @@
 'use strict';
 
-import db from '../database';
-import io from '../socket.io';
+import * as db from '../database';
+import * as io from '../socket.io';
 
-export function Messaging() {
-    return {
-        getUnreadCount: async (uid: string | number): Promise<number> => {
-            if (!(parseInt(uid as string, 10) > 0)) {
-                return 0;
-            }
-            
-            const result = await db.sortedSetCard(`uid:${uid}:chat:rooms:unread`);
-            return result;
-        },
+interface Messaging {
+  getUnreadCount: (uid: string | number) => Promise<number>;
+  pushUnreadCount: (uids: Array<string | number>, data?: any) => Promise<void>;
+  markRead: (uid: string | number, roomId: number) => Promise<void>;
+  hasRead: (uids: Array<string | number>, roomId: number) => Promise<boolean[]>;
+  markAllRead: (uid: string | number) => Promise<void>;
+  markUnread: (uids: Array<string | number>, roomId: number) => Promise<void>;
+  getRoomData: (roomId: number) => Promise<any>;
+  roomExists: (roomId: number) => Promise<boolean>;
+}
 
-        pushUnreadCount: async (uids: string[] | string, data: any = null): Promise<undefined> => {
-            if (!Array.isArray(uids)) {
-                uids = [uids];
-            }
-            
-            uids = uids.filter(uid => parseInt(uid as string, 10) > 0);
-            
-            if (!uids.length) {
-                return;
-            }
-            
-            uids.forEach((uid) => {
-                io.in(`uid_${uid}`).emit('event:unread.updateChatCount', data);
-            });
-        },
+module.exports = function (Messaging: Messaging) {
+  Messaging.getUnreadCount = async (uid: string | number) => {
+    if (!(parseInt(uid as string, 10) > 0)) {
+      return 0;
+    }
 
-        markRead: async (uid: string | number, roomId: string): Promise<undefined> => {
-            await Promise.all([
-                db.sortedSetRemove(`uid:${uid}:chat:rooms:unread`, roomId),
-                db.setObjectField(`uid:${uid}:chat:rooms:read`, roomId, Date.now()),
-            ]);
-        },
+    return await db.sortedSetCard(`uid:${uid}:chat:rooms:unread`);
+  };
 
-        hasRead: async (uids: string[], roomId: string): Promise<boolean[]> => {
-            if (!uids.length) {
-                return [];
-            }
-            
-            const roomData = await this.getRoomData(roomId);
-            if (!roomData) {
-                return uids.map(() => false);
-            }
-            
-            if (roomData.public) {
-                const [userTimestamps, mids] = await Promise.all([
-                    db.getObjectsFields(uids.map(uid => `uid:${uid}:chat:rooms:read`), [roomId]),
-                    db.getSortedSetRevRangeWithScores(`chat:room:${roomId}:mids`, 0, 0),
-                ]);
-                
-                const lastMsgTimestamp = mids[0] ? mids[0].score : 0;
-                return uids.map(
-                    (uid, index) =>
-                        !userTimestamps[index] ||
-                        !userTimestamps[index][roomId] ||
-                        parseInt(userTimestamps[index][roomId], 10) > lastMsgTimestamp
-                );
-            }
-                
-            const isMembers = await db.isMemberOfSortedSets(
-                uids.map(uid => `uid:${uid}:chat:rooms:unread`),
-                roomId
-            );
-                
-            return uids.map((uid, index) => !isMembers[index]);
-        },
+  Messaging.pushUnreadCount = async (uids: Array<string | number>, data: any = null) => {
+    if (!Array.isArray(uids)) {
+      uids = [uids];
+    }
+    uids = uids.filter(uid => parseInt(uid as string, 10) > 0);
+    if (!uids.length) {
+      return;
+    }
+    uids.forEach((uid) => {
+      io.in(`uid_${uid}`).emit('event:unread.updateChatCount', data);
+    });
+  };
 
-        markAllRead: async (uid: string | number): Promise<undefined> => {
-            await db.delete(`uid:${uid}:chat:rooms:unread`);
-        },
+  Messaging.markRead = async (uid: string | number, roomId: number) => {
+    await Promise.all([
+      db.sortedSetRemove(`uid:${uid}:chat:rooms:unread`, roomId),
+      db.setObjectField(`uid:${uid}:chat:rooms:read`, roomId, Date.now()),
+    ]);
+  };
 
-        markUnread: async (uids: string[], roomId: string): Promise<undefined> => {
-            const exists = await this.roomExists(roomId);
-            if (!exists) {
-              return;
-            }
-      
-            const keys = uids.map(uid => `uid:${uid}:chat:rooms:unread`);
-            await db.sortedSetsAdd(keys, Date.now(), roomId);
-          },
-      
-          roomExists: async (roomId: string): Promise<boolean> => {
-            const exists = await db.exists(`chat:room:${roomId}`);
-            return exists > 0;
-          },
-      
-          getRoomData: async (roomId: string): Promise<any> => {
-            return await db.getObject(`chat:room:${roomId}`);
-          }
-    };
-};
+  Messaging.hasRead = async (uids: Array<string | number>, roomId: number) => {
+    if (!uids.length) {
+      return [];
+    }
+    const roomData = await Messaging.getRoomData(roomId);
+    if (!roomData) {
+      return uids.map(() => false);
+    }
+    if (roomData.public) {
+      const [userTimestamps, mids] = await Promise.all([
+        db.getObjectsFields(uids.map(uid => `uid:${uid}:chat:rooms:read`), [roomId]),
+        db.getSortedSetRevRangeWithScores(`chat:room:${roomId}:mids`, 0, 0),
+      ]);
+      const lastMsgTimestamp = mids[0] ? mids[0].score : 0;
+      return uids.map(
+        (uid, index) => !userTimestamps[index] ||
+          !userTimestamps[index][roomId] ||
+          parseInt(userTimestamps[index][roomId], 10) > lastMsgTimestamp
+      );
+    }
+    const isMembers = await db.isMemberOfSortedSets(
+      uids.map(uid => `uid:${uid}:chat:rooms:unread`),
+      roomId
+    );
+    return uids.map((uid, index) => !isMembers[index]);
+  };
+
+  Messaging.markAllRead = async (uid: string | number) => {
+    await db.delete(`uid:${uid}:chat:rooms:unread`);
+  };
+
+  Messaging.markUnread = async (uids: Array<string | number>, roomId: number) => {
+    const exists = await Messaging.roomExists(roomId);
+    if (!exists) {
+      return;
+    }
+    const keys = uids.map(uid => `uid:${uid}:chat:rooms:unread`);
+    await db.sortedSetsAdd(keys, Date.now(), roomId);
+  };
+}
