@@ -79,7 +79,7 @@ module.exports = function (Messaging: MessagingInterface) {
 	};
 
 	const canEditDelete = async (messageId: number, uid: number, type: 'edit' | 'delete'): Promise<void> => {
-		let durationConfig : string = '';
+		let durationConfig = '';
 		if (type === 'edit') {
 			durationConfig = 'chatEditDuration';
 		} else if (type === 'delete') {
