@@ -1,4 +1,19 @@
 "use strict";
+/*
+    *******************************************************************************
+    ************************  Universidad Simon Bolivar  **************************
+    *********  Departamento de Computacion y Tecnologia de la Informacion  ********
+    *                                                                             *
+    * - Trimestre: Septiembre-Diciembre 2024                                      *
+    * - Materia: Ingenieria de Software 1                                         *
+    * - Profesor: Eduardo Feo Flushing                                            *
+    *                                                                             *
+    * - Author: Junior Lara (17-10303)                                            *
+    *                                                                             *
+    * Proyecto 1B: Traducción a TypeScript o Incremento de Cobertura de Código    *
+    *                                                                             *
+    *******************************************************************************
+*/
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -47,12 +62,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* Seccion: IMPORTACIONES */
 /* eslint-disable import/no-import-module-exports */
 var meta = require("../meta");
 var user = require("../user");
 var plugins = require("../plugins");
 var privileges = require("../privileges");
 var sockets = require("../socket.io");
+/* Seccion: FUNCIONES */
 module.exports = function (Messaging) {
     var _this = this;
     Messaging.editMessage = function (uid, mid, roomId, content) { return __awaiter(_this, void 0, void 0, function () {
@@ -65,15 +82,13 @@ module.exports = function (Messaging) {
                     return [4 /*yield*/, Messaging.getMessageField(mid, 'content')];
                 case 2:
                     raw = _a.sent();
-                    if (raw === content) {
+                    if (raw === content)
                         return [2 /*return*/];
-                    }
                     return [4 /*yield*/, plugins.hooks.fire('filter:messaging.edit', { content: content, edited: Date.now() })];
                 case 3:
                     payload = _a.sent();
-                    if (!String(payload.content).trim()) {
+                    if (!String(payload.content).trim())
                         throw new Error('[[error:invalid-chat-message]]');
-                    }
                     return [4 /*yield*/, Messaging.setMessageFields(mid, payload)];
                 case 4:
                     _a.sent();
@@ -87,10 +102,11 @@ module.exports = function (Messaging) {
                     }
                     // eslint-disable-next-line max-len
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-                    plugins.hooks.fire('action:messaging.edit', {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                        message: __assign(__assign({}, messages[0]), { content: payload.content }),
-                    });
+                    return [4 /*yield*/, plugins.hooks.fire('action:messaging.edit', { message: __assign(__assign({}, messages[0]), { content: payload.content }) })];
+                case 6:
+                    // eslint-disable-next-line max-len
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+                    _a.sent();
                     return [2 /*return*/];
             }
         });
@@ -110,9 +126,8 @@ module.exports = function (Messaging) {
                     return [4 /*yield*/, Messaging.messageExists(messageId)];
                 case 1:
                     exists = _a.sent();
-                    if (!exists) {
+                    if (!exists)
                         throw new Error('[[error:invalid-mid]]');
-                    }
                     return [4 /*yield*/, user.isAdminOrGlobalMod(uid)];
                 case 2:
                     isAdminOrGlobalMod = _a.sent();
@@ -128,30 +143,26 @@ module.exports = function (Messaging) {
                 case 3:
                     userData = _a.sent();
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                    if (userData.banned) {
+                    if (userData.banned)
                         throw new Error('[[error:user-banned]]');
-                    }
                     return [4 /*yield*/, privileges.global.can(['chat', 'chat:privileged'], uid)];
                 case 4:
                     canChat = _a.sent();
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                    if (!canChat.includes(true)) {
+                    if (!canChat.includes(true))
                         throw new Error('[[error:no-privileges]]');
-                    }
                     return [4 /*yield*/, Messaging.getMessageFields(messageId, ['fromuid', 'timestamp', 'system'])];
                 case 5:
                     messageData = _a.sent();
-                    if (isAdminOrGlobalMod && !messageData.system) {
+                    if (isAdminOrGlobalMod && !messageData.system)
                         return [2 /*return*/];
-                    }
                     chatConfigDuration = meta.config[durationConfig];
                     if (chatConfigDuration && Date.now() - messageData.timestamp > chatConfigDuration * 1000) {
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                         throw new Error("[[error:chat-".concat(type, "-duration-expired, ").concat(meta.config[durationConfig], "]]"));
                     }
-                    if (messageData.fromuid === parseInt(uid.toString(), 10) && !messageData.system) {
+                    if (messageData.fromuid === parseInt(uid.toString(), 10) && !messageData.system)
                         return [2 /*return*/];
-                    }
                     throw new Error("[[error:cant-".concat(type, "-chat-message]]"));
             }
         });
@@ -181,9 +192,8 @@ module.exports = function (Messaging) {
                     ])];
                 case 1:
                     _a = _b.sent(), isAdmin = _a[0], isGlobalMod = _a[1], inRoom = _a[2], isRoomOwner = _a[3];
-                    if (!isAdmin && !isGlobalMod && (!inRoom || !isRoomOwner)) {
+                    if (!isAdmin && !isGlobalMod && (!inRoom || !isRoomOwner))
                         throw new Error('[[error:no-privileges]]');
-                    }
                     return [2 /*return*/];
             }
         });
