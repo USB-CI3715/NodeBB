@@ -1,72 +1,139 @@
-'use strict';
+import { getObjects, setObject, parseIntFields } from '../database';
+import { Hooks } from '../plugins/hooks';
+import { utils } from '../utils';
 
-import { any } from "async";
-const db = require('./src/database');
-const plugins = require('./src/plugins');
-const utils = require('./src/utils');
-
-let intFields: string[] =  [
+const intFields: string[] = [
 	'uid', 'pid', 'tid', 'deleted', 'timestamp',
 	'upvotes', 'downvotes', 'deleterUid', 'edited',
 	'replies', 'bookmarks',
 ];
 
-export default function (Posts: any):any {
-	Posts.getPostsFields = async function (pids:string[], fields: string[]) {
-		if (!Array.isArray(pids) || !pids.length) {
-			return [];
-		}
-		const keys = pids.map(pid => `post:${pid}`);
-		const postData = await db.getObjects(keys, fields);
-		const result = await plugins.hooks.fire('filter:post.getFields', {
-			pids: pids,
-			posts: postData,
-			fields: fields,
-		});
-		result.posts.forEach((post: any) => modifyPost(post, fields));
-		return result.posts;
-	};
+interface Post {
+	votes: number;
+	upvotes: number;
+	downvotes: number;
+	timestamp: number;
+	timestampISO: string;
+	edited: number;
+	editedISO: string;
+}
 
-	Posts.getPostData = async function (pid:string) {
-		const posts = await Posts.getPostsFields([pid], []);
-		return posts && posts.length ? posts[0] : null;
-	};
+interface Utils {
+	toISOString: (timestamp: number) => string;
+  }
 
-	Posts.getPostsData = async function (pids:string[]) {
-		return await Posts.getPostsFields(pids, []);
-	};
+declare const utils:Utils;
+declare const hooks:Hooks;
+declare const getObjects: (keys: string[], fields: string[]) => Promise<Post[]>;
 
-	Posts.getPostField = async function (pid:string, field:string) {
-		const post = await Posts.getPostFields(pid, [field]);
-		return post ? post[field] : null;
-	};
-
-	Posts.getPostFields = async function (pid:string, fields:string) {
-		const posts = await Posts.getPostsFields([pid], fields);
-		return posts ? posts[0] : null;
-	};
-
-	Posts.setPostField = async function (pid:string, field:string, value:string) {
-		await Posts.setPostFields(pid, { [field]: value });
-	};
-
-	Posts.setPostFields = async function (pid:String, data:any) {
-		await db.setObject(`post:${pid}`, data);
-		plugins.hooks.fire('action:post.setFields', { data: { ...data, pid } });
-	};
-};
-
-function modifyPost(post:any, fields:string[]): void {
+function modifyPost(post:Post, fields:string[]): void {
 	if (post) {
-		db.parseIntFields(post, intFields, fields);
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		parseIntFields(post, intFields, fields);
 		if (post.hasOwnProperty('upvotes') && post.hasOwnProperty('downvotes')) {
 			post.votes = post.upvotes - post.downvotes;
 		}
 		if (post.hasOwnProperty('timestamp')) {
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 			post.timestampISO = utils.toISOString(post.timestamp);
 		}
 		if (post.hasOwnProperty('edited')) {
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 			post.editedISO = post.edited !== 0 ? utils.toISOString(post.edited) : '';
 		}
 	}
 }
+
+
+
+export default class Posts {
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostsFields(pids:string[], fields: string[]): Promise<object[]> {
+		if (!Array.isArray(pids) || !pids.length) {
+			return [];
+		}
+		const keys = pids.map(pid => `post:${pid}`);
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const postData: Post[] = await getObjects(keys, fields);
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const result: { pids: string[], posts: Post[], fields: string[] } = await hooks.fire('filter:post.getFields', {
+			pids: pids,
+			posts: postData,
+			fields: fields,
+		});
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		result.posts.forEach((post: Post) => modifyPost(post, fields));
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		return result.posts;
+	}
+
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostData(pid:string): Promise<object> {
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const posts:object[] = await Posts.getPostsFields([pid], []);
+		return posts && posts.length ? posts[0] : null;
+	}
+
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostsData(pids:string[]):Promise<object[]> {
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		return await Posts.getPostsFields(pids, []);
+	}
+
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostField(pid:string, field:string): Promise<object> {
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const post: object = await Posts.getPostFields(pid, [field]);
+		if (post) {
+			return post[field];
+		}
+		return null;
+	}
+
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostFields(pid:string, fields:string[]): Promise<object> {
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const posts: object[] = await Posts.getPostsFields([pid], fields);
+		if (posts && posts.length) {
+			return posts[0];
+		}
+		return null;
+	}
+
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async setPostField(pid:string, field:string, value:string):Promise<void> {
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		await Posts.setPostFields(pid, { [field]: value });
+	}
+
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async setPostFields(pid:string, data:object): Promise<void> {
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		await setObject(`post:${pid}`, data);
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		Hooks.fire('action:post.setFields', { data: { ...data, pid } });
+	}
+}
+
+
