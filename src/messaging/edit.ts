@@ -79,7 +79,7 @@ module.exports = function (Messaging: MessagingInterface) {
 	};
 
 	const canEditDelete = async (messageId: number, uid: number, type: 'edit' | 'delete'): Promise<void> => {
-		let durationConfig = '';
+		let durationConfig : string = '';
 		if (type === 'edit') {
 			durationConfig = 'chatEditDuration';
 		} else if (type === 'delete') {
@@ -119,10 +119,10 @@ module.exports = function (Messaging: MessagingInterface) {
 		if (isAdminOrGlobalMod && !messageData.system) return;
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-		const chatConfigDuration = meta.config[durationConfig];
+		const chatConfigDuration : number = meta.config[durationConfig];
 		if (chatConfigDuration && Date.now() - messageData.timestamp > chatConfigDuration * 1000) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-			throw new Error(`[[error:chat-${type}-duration-expired, ${meta.config[durationConfig]}]]`);
+			throw new Error(`[[error:chat-${type}-duration-expired, ${chatConfigDuration}]]`);
 		}
 
 		if (messageData.fromuid === parseInt(uid.toString(), 10) && !messageData.system) return;
