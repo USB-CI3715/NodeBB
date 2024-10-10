@@ -1,3 +1,20 @@
+/*
+	*******************************************************************************
+	************************  Universidad Simon Bolivar  **************************
+	*********  Departamento de Computacion y Tecnologia de la Informacion  ********
+	*                                                                             *
+	* - Trimestre: Septiembre-Diciembre 2024                                      *
+	* - Materia: Ingenieria de Software 1                                         *
+	* - Profesor: Eduardo Feo Flushing                                            *
+	*                                                                             *
+	* - Author: Junior Lara (17-10303)                                            *
+	*                                                                             *
+	* Proyecto 1B: Traducción a TypeScript o Incremento de Cobertura de Código    *
+	*                                                                             *
+	*******************************************************************************
+*/
+
+/* Seccion: IMPORTACIONES */
 /* eslint-disable import/no-import-module-exports */
 import * as meta from '../meta';
 import * as user from '../user';
@@ -5,46 +22,47 @@ import * as plugins from '../plugins';
 import * as privileges from '../privileges';
 import * as sockets from '../socket.io';
 
+/* Seccion: INTERFACES */
 interface Payload {
-	content: string;
-	edited: number;
+	content : string;
+	edited : number;
 }
 
 interface MessageData {
-	fromuid: number;
-	timestamp: number;
-	system: boolean;
+	fromuid : number;
+	timestamp : number;
+	system : boolean;
+	deleted : boolean;
 }
 
 interface MessagingInterface {
-	editMessage: (uid: number, mid: number, roomId: number, content: string) => Promise<void>;
-	getMessageField: (mid: number, field: string) => Promise<string>;
-	setMessageFields: (mid: number, payload: Payload) => Promise<void>;
-	checkContent: (content: string) => Promise<void>;
-	getMessagesData: (mids: number[], uid: number, roomId: number, includeDeleted: boolean) => Promise<any[]>;
-	messageExists: (messageId: number) => Promise<boolean>;
-	getMessageFields: (messageId: number, fields: string[]) => Promise<MessageData>;
-	isUserInRoom: (uid: number, roomId: number) => Promise<boolean>;
-	isRoomOwner: (uid: number, roomId: number) => Promise<boolean>;
-	canEdit: (messageId: number, uid: number) => Promise<void>;
-	canDelete: (messageId: number, uid: number) => Promise<void>;
-	canPin: (roomId: number, uid: number) => Promise<void>;
+	editMessage : (uid: number, mid: number, roomId: number, content: string) => Promise<void>;
+	getMessageField : (mid: number, field: string) => Promise<string>;
+	setMessageFields : (mid: number, payload: Payload) => Promise<void>;
+	checkContent : (content: string) => Promise<void>;
+	getMessagesData : (mids: number[], uid: number, roomId: number, includeDeleted: boolean) => Promise<MessageData[]>;
+	messageExists : (messageId: number) => Promise<boolean>;
+	getMessageFields : (messageId: number, fields: string[]) => Promise<MessageData>;
+	isUserInRoom : (uid: number, roomId: number) => Promise<boolean>;
+	isRoomOwner : (uid: number, roomId: number) => Promise<boolean>;
+	canEdit : (messageId: number, uid: number) => Promise<void>;
+	canDelete : (messageId: number, uid: number) => Promise<void>;
+	canPin : (roomId: number, uid: number) => Promise<void>;
 }
 
+/* Seccion: FUNCIONES */
 module.exports = function (Messaging: MessagingInterface) {
 	Messaging.editMessage = async (uid: number, mid: number, roomId: number, content: string): Promise<void> => {
 		await Messaging.checkContent(content);
 		const raw = await Messaging.getMessageField(mid, 'content');
-		if (raw === content) {
-			return;
-		}
+		if (raw === content) return;
+
 		// eslint-disable-next-line max-len
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
 		const payload: Payload = await plugins.hooks.fire('filter:messaging.edit', { content: content, edited: Date.now() });
 
-		if (!String(payload.content).trim()) {
-			throw new Error('[[error:invalid-chat-message]]');
-		}
+		if (!String(payload.content).trim()) throw new Error('[[error:invalid-chat-message]]');
+
 		await Messaging.setMessageFields(mid, payload);
 
 		const messages = await Messaging.getMessagesData([mid], uid, roomId, true);
@@ -57,10 +75,7 @@ module.exports = function (Messaging: MessagingInterface) {
 
 		// eslint-disable-next-line max-len
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-		plugins.hooks.fire('action:messaging.edit', {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			message: { ...messages[0], content: payload.content },
-		});
+		await plugins.hooks.fire('action:messaging.edit', { message: { ...messages[0], content: payload.content } });
 	};
 
 	const canEditDelete = async (messageId: number, uid: number, type: 'edit' | 'delete'): Promise<void> => {
@@ -72,9 +87,7 @@ module.exports = function (Messaging: MessagingInterface) {
 		}
 
 		const exists = await Messaging.messageExists(messageId);
-		if (!exists) {
-			throw new Error('[[error:invalid-mid]]');
-		}
+		if (!exists) throw new Error('[[error:invalid-mid]]');
 
 		// eslint-disable-next-line max-len
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
@@ -91,26 +104,19 @@ module.exports = function (Messaging: MessagingInterface) {
 		// eslint-disable-next-line max-len
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
 		const userData = await user.getUserFields(uid, ['banned']);
+
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		if (userData.banned) {
-			throw new Error('[[error:user-banned]]');
-		}
+		if (userData.banned) throw new Error('[[error:user-banned]]');
 
 		// eslint-disable-next-line max-len
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-		const canChat = await privileges.global.can(
-			['chat', 'chat:privileged'],
-			uid
-		);
+		const canChat = await privileges.global.can(['chat', 'chat:privileged'], uid);
+
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		if (!canChat.includes(true)) {
-			throw new Error('[[error:no-privileges]]');
-		}
+		if (!canChat.includes(true)) throw new Error('[[error:no-privileges]]');
 
 		const messageData = await Messaging.getMessageFields(messageId, ['fromuid', 'timestamp', 'system']);
-		if (isAdminOrGlobalMod && !messageData.system) {
-			return;
-		}
+		if (isAdminOrGlobalMod && !messageData.system) return;
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 		const chatConfigDuration = meta.config[durationConfig];
@@ -119,10 +125,7 @@ module.exports = function (Messaging: MessagingInterface) {
 			throw new Error(`[[error:chat-${type}-duration-expired, ${meta.config[durationConfig]}]]`);
 		}
 
-		if (messageData.fromuid === parseInt(uid.toString(), 10) && !messageData.system) {
-			return;
-		}
-
+		if (messageData.fromuid === parseInt(uid.toString(), 10) && !messageData.system) return;
 		throw new Error(`[[error:cant-${type}-chat-message]]`);
 	};
 
@@ -138,8 +141,7 @@ module.exports = function (Messaging: MessagingInterface) {
 			Messaging.isUserInRoom(uid, roomId),
 			Messaging.isRoomOwner(uid, roomId),
 		]);
-		if (!isAdmin && !isGlobalMod && (!inRoom || !isRoomOwner)) {
-			throw new Error('[[error:no-privileges]]');
-		}
+
+		if (!isAdmin && !isGlobalMod && (!inRoom || !isRoomOwner)) throw new Error('[[error:no-privileges]]');
 	};
 };
