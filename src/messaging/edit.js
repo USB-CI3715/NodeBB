@@ -159,7 +159,7 @@ module.exports = function (Messaging) {
                     chatConfigDuration = meta.config[durationConfig];
                     if (chatConfigDuration && Date.now() - messageData.timestamp > chatConfigDuration * 1000) {
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                        throw new Error("[[error:chat-".concat(type, "-duration-expired, ").concat(meta.config[durationConfig], "]]"));
+                        throw new Error("[[error:chat-".concat(type, "-duration-expired, ").concat(chatConfigDuration, "]]"));
                     }
                     if (messageData.fromuid === parseInt(uid.toString(), 10) && !messageData.system)
                         return [2 /*return*/];
