@@ -1,10 +1,10 @@
 'use strict';
 
 import * as winston from 'winston';
-import * as db from '../database';
-import * as user from '../user';
-import * as plugins from '../plugins';
-import * as cache from '../cache';
+const db: any = require('../database');
+const user: any = require('../user');
+const plugins: any = require('../plugins');
+const cache: any = require('../cache');
 
 export default function (Groups: any) {
   Groups.join = async function (groupNames: string | string[], uid: string): Promise<void> {
@@ -49,7 +49,7 @@ export default function (Groups: any) {
     Groups.clearCache(uid, groupsToJoin);
     cache.del(groupsToJoin.map(name => `group:${name}:members`));
 
-    const groupData = await Groups.getGroupsFields(groupsToJoin, ['name', 'hidden', 'memberCount']);
+    const groupData: { name: string, hidden: boolean, memberCount: number }[] = await Groups.getGroupsFields(groupsToJoin, ['name', 'hidden', 'memberCount']);
     const visibleGroups = groupData.filter(groupData => groupData && !groupData.hidden);
 
     if (visibleGroups.length) {
@@ -81,8 +81,8 @@ export default function (Groups: any) {
           hidden: 1,
         });
       } catch (err) {
-        if (err && err.message !== '[[error:group-already-exists]]') {
-          winston.error(`[groups.join] Could not create new hidden group (${groupName})\n${err.stack}`);
+        if (err && (err as { message: string }).message !== '[[error:group-already-exists]]') {
+          winston.error(`[groups.join] Could not create new hidden group (${groupName})\n${(err as { stack: string }).stack}`);
           throw err;
         }
       }
