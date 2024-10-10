@@ -11,6 +11,7 @@ const user = require('../src/user');
 const search = require('../src/search');
 const privileges = require('../src/privileges');
 const request = require('../src/request');
+const posts = require('../src/posts');
 
 describe('Search', () => {
 	let phoebeUid;
@@ -135,6 +136,48 @@ describe('Search', () => {
 		data = await socketCategories.categorySearch({ uid: phoebeUid }, { query: '', parentCid: 0 });
 		assert.strictEqual(data.length, 5);
 	});
+
+	it('should search in bookmarks', async () => {
+		posts.bookmark(post1Data.pid, gingerUid);
+		let result = await search.search({
+			searchIn: 'bookmarks',
+			uid: gingerUid,
+			categories: ['all'],
+		})
+		assert.strictEqual(result.matchCount, 1);
+		assert.strictEqual(result.posts[0].pid, post1Data.pid);
+	});
+
+	it('should not find any bookmark', async () => {
+		const result = await search.search({
+			searchIn: 'bookmarks',
+			uid: phoebeUid,
+			categories: ['all'],
+		});
+		assert.strictEqual(result.matchCount, 0);
+	});
+
+	it('should search bookmark by query', async () => {
+		posts.bookmark(post1Data.pid, gingerUid);
+		let result = await search.search({
+			query: 'nodebb',
+			searchIn: 'bookmarks',
+			uid: gingerUid,
+			categories: ['all'],
+			matchWords: "any",
+		});
+		assert.strictEqual(result.matchCount, 1);
+		assert.strictEqual(result.posts[0].pid, post1Data.pid);
+
+		result = await search.search({
+			query: 'xxxx',
+			searchIn: 'bookmarks',
+			uid: gingerUid,
+			categories: ['all'],
+			matchWords: "any",
+		});
+		assert.strictEqual(result.matchCount, 0);
+	})
 
 	it('should fail if searchIn is wrong', (done) => {
 		search.search({
