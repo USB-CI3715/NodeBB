@@ -25,7 +25,7 @@ const _validatePath = async (relativePaths: string | string[]): Promise<void> =>
     }
 };
 
-module.exports = function (User: any) {
+export default function (User: any) {
 
     User.associateUpload = async (uid: number, relativePath: string): Promise<void> => {
         await _validatePath(relativePath);
