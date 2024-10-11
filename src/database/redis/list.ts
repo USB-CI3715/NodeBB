@@ -12,7 +12,7 @@ interface Module {
     client: any;
     listPrepend(key: string, value: any): Promise<void>;
     listAppend(key: string, value: any): Promise<void>;
-    listRemoveLast(key: string): Promise<string | null>;
+    listRemoveLast(key: string): Promise<any>;
     listRemoveAll(key: string, value: any): Promise<void>;
     listTrim(key: string, start: number, stop: number): Promise<void>;
     getListRange(key: string, start: number, stop: number): Promise<any>;
@@ -45,7 +45,7 @@ module.exports = function (module: Module) {
 	};
 
 
-	module.listRemoveAll = async function (key: string, value: string[] | string): Promise<void> {
+	module.listRemoveAll = async function (key: string, value: any): Promise<void> {
 		if (!key) {
 			return;
 		}
