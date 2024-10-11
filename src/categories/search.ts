@@ -31,7 +31,7 @@ interface SearchResult {
 	categories?: Category[];
 }
 
-module.exports = function (Categories: any) {
+export default function (Categories: any) {
 	Categories.search = async function (data: SearchData): Promise<SearchResult> {
 		const query = data.query || '';
 		const page = data.page || 1;
