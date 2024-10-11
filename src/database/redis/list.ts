@@ -13,9 +13,9 @@ interface Module {
     listPrepend(key: string, value: any): Promise<void>;
     listAppend(key: string, value: any): Promise<void>;
     listRemoveLast(key: string): Promise<string | null>;
-    listRemoveAll(key: string, value: string[] | string): Promise<void>;
+    listRemoveAll(key: string, value: any): Promise<void>;
     listTrim(key: string, start: number, stop: number): Promise<void>;
-    getListRange(key: string, start: number, stop: number): Promise<string[] | null>;
+    getListRange(key: string, start: number, stop: number): Promise<any>;
     listLength(key: string): Promise<number>;
 }
 
