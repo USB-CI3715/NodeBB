@@ -38,10 +38,10 @@ module.exports = function (module: Module) {
 
 	module.listRemoveLast = async function (key: string): Promise<any> {
 		if (!key) {
-			return null;
+			return;
 		}
 		const result = await module.client.rpop(key);
-		return result || null;
+		return result;
 	};
 
 
@@ -69,10 +69,10 @@ module.exports = function (module: Module) {
 
 	module.getListRange = async function (key: string, start: number, stop: number): Promise<any> {
 		if (!key) {
-			return null;
+			return;
 		}
 		const result = await module.client.lrange(key, start, stop);
-		return result || null;
+		return result;
 	};
 
 
