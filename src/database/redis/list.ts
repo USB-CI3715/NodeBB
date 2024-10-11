@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { RedisClientType } from 'redis';
+import type { RedisClientType } from 'redis';
 import { execBatch } from './helpers';
 
 interface Module {
