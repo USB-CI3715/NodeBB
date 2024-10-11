@@ -2,18 +2,16 @@
 import { createClient, RedisClientType } from 'redis';
 import * as helpers from './helpers';
 
-
 interface Module {
     client: RedisClientType;
-    listPrepend(key: string, value: number | string): Promise<void>;
-    listAppend(key: string, value: number | string): Promise<void>;
+    listPrepend(key: string, value: any): Promise<void>;
+    listAppend(key: string, value: any): Promise<void>;
     listRemoveLast(key: string): Promise<string | null>;
     listRemoveAll(key: string, value: string[] | string): Promise<void>;
     listTrim(key: string, start: number, stop: number): Promise<void>;
     getListRange(key: string, start: number, stop: number): Promise<string[] | null>;
     listLength(key: string): Promise<number>;
 }
-
 
 module.exports = function (module: Module) {
 
