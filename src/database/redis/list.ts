@@ -36,7 +36,7 @@ module.exports = function (module: Module) {
 	};
 
 
-	module.listRemoveLast = async function (key: string): Promise<string | null> {
+	module.listRemoveLast = async function (key: string): Promise<any> {
 		if (!key) {
 			return null;
 		}
@@ -67,7 +67,7 @@ module.exports = function (module: Module) {
 	};
 
 
-	module.getListRange = async function (key: string, start: number, stop: number): Promise<string[] | null> {
+	module.getListRange = async function (key: string, start: number, stop: number): Promise<any> {
 		if (!key) {
 			return null;
 		}
