@@ -139,11 +139,11 @@ describe('Search', () => {
 
 	it('should search in bookmarks', async () => {
 		posts.bookmark(post1Data.pid, gingerUid);
-		let result = await search.search({
+		const result = await search.search({
 			searchIn: 'bookmarks',
 			uid: gingerUid,
 			categories: ['all'],
-		})
+		});
 		assert.strictEqual(result.matchCount, 1);
 		assert.strictEqual(result.posts[0].pid, post1Data.pid);
 	});
@@ -164,7 +164,7 @@ describe('Search', () => {
 			searchIn: 'bookmarks',
 			uid: gingerUid,
 			categories: ['all'],
-			matchWords: "any",
+			matchWords: 'any',
 		});
 		assert.strictEqual(result.matchCount, 1);
 		assert.strictEqual(result.posts[0].pid, post1Data.pid);
@@ -174,10 +174,10 @@ describe('Search', () => {
 			searchIn: 'bookmarks',
 			uid: gingerUid,
 			categories: ['all'],
-			matchWords: "any",
+			matchWords: 'any',
 		});
 		assert.strictEqual(result.matchCount, 0);
-	})
+	});
 
 	it('should fail if searchIn is wrong', (done) => {
 		search.search({
