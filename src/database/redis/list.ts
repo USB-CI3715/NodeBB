@@ -50,7 +50,7 @@ module.exports = function (module: Module) {
 			return;
 		}
 		if (Array.isArray(value)) {
-			const batch = module.client.multi();
+			const batch = module.client.batch();
 			value.forEach(value => batch.lRem(key, 0, value));
 			await execBatch(batch);
 		} else {
