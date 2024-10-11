@@ -28,7 +28,7 @@ interface SearchResult {
 	matchCount: number;
 	pageCount?: number;
 	timing?: string;
-	categories?: any[];
+	categories?: Category[];
 }
 
 module.exports = function (Categories: any) {
@@ -49,7 +49,7 @@ module.exports = function (Categories: any) {
 		});
 		cids = await privileges.categories.filterCids('find', result.cids, uid);
 
-		const searchResult = {
+		const searchResult: SearchResult = {
 			matchCount: cids.length,
 		};
 
@@ -84,25 +84,27 @@ module.exports = function (Categories: any) {
 			}
 			return c1.order - c2.order;
 		});
+
 		searchResult.timing = (process.hrtime(startTime)[1] / 1000000).toFixed(2);
-		searchResult.categories = categoryData.filter(c: Category => cids.includes(c.cid));
+		searchResult.categories = categoryData.filter((c: Category) => cids.includes(c.cid));
 		return searchResult;
+		
 	};
 
 	async function findCids(query: string, hardCap?: number): Promise<number[]> {
 		if (!query || String(query).length < 2) {
 			return [];
 		}
-		const data = await db.getSortedSetScan({
+		const data: string[] = await db.getSortedSetScan({
 			key: 'categories:name',
 			match: `*${query.toLowerCase()}*`,
 			limit: hardCap || 500,
 		});
-		return data.map(data: string[] => parseInt(data.split(':').pop()!, 10));
+		return data.map((data: string) => parseInt(data.split(':').pop()!, 10));
 	}
 
 	async function getChildrenCids(cids: number[], uid: number): Promise<number[]> {
-		const childrenCids = await Promise.all(cids.map(cid: number => Categories.getChildrenCids(cid)));
+		const childrenCids = await Promise.all(cids.map((cid: number)=> Categories.getChildrenCids(cid)));
 		return await privileges.categories.filterCids('find', _.flatten(childrenCids), uid);
 	}
 };
