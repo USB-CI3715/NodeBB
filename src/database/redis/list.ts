@@ -24,7 +24,7 @@ module.exports = function (module: Module) {
 		if (!key) {
 			return;
 		}
-		await module.client.lPush(key, value);
+		await module.client.lpush(key, value);
 	};
 
 
@@ -32,7 +32,7 @@ module.exports = function (module: Module) {
 		if (!key) {
 			return;
 		}
-		await module.client.rPush(key, value);
+		await module.client.rpush(key, value);
 	};
 
 
@@ -40,7 +40,7 @@ module.exports = function (module: Module) {
 		if (!key) {
 			return null;
 		}
-		const result = await module.client.rPop(key);
+		const result = await module.client.rpop(key);
 		return result || null;
 	};
 
@@ -63,7 +63,7 @@ module.exports = function (module: Module) {
 		if (!key) {
 			return;
 		}
-		await module.client.lTrim(key, start, stop);
+		await module.client.ltrim(key, start, stop);
 	};
 
 
@@ -71,12 +71,12 @@ module.exports = function (module: Module) {
 		if (!key) {
 			return null;
 		}
-		const result = await module.client.lRange(key, start, stop);
+		const result = await module.client.lrange(key, start, stop);
 		return result || null;
 	};
 
 
 	module.listLength = async function (key: string): Promise<number> {
-		return await module.client.lLen(key);
+		return await module.client.llen(key);
 	};
 };
