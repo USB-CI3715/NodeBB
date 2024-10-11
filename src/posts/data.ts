@@ -50,8 +50,6 @@ function modifyPost(post:Post, fields:string[]): void {
 
 
 export default class Posts {
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	static async getPostsFields(pids:string[], fields: string[]): Promise<object[]> {
 		if (!Array.isArray(pids) || !pids.length) {
 			return [];
@@ -61,54 +59,27 @@ export default class Posts {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		const postData: Post[] = await getObjects(keys, fields);
 		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
 		const result: { pids: string[], posts: Post[], fields: string[] } = await hooks.fire('filter:post.getFields', {
 			pids: pids,
 			posts: postData,
 			fields: fields,
 		});
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		result.posts.forEach((post: Post) => modifyPost(post, fields));
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		return result.posts;
 	}
 
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	static async getPostData(pid:string): Promise<object> {
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		const posts:object[] = await Posts.getPostsFields([pid], []);
 		return posts && posts.length ? posts[0] : null;
 	}
 
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	static async getPostsData(pids:string[]):Promise<object[]> {
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		return await Posts.getPostsFields(pids, []);
 	}
 
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-	static async getPostField(pid:string, field:string): Promise<object> {
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		const post: object = await Posts.getPostFields(pid, [field]);
-		if (post) {
-			return post[field];
-		}
-		return null;
-	}
-
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-	static async getPostFields(pid:string, fields:string[]): Promise<object> {
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostFields(pid:string, fields:string[]): Promise<object | null> {
 		const posts: object[] = await Posts.getPostsFields([pid], fields);
 		if (posts && posts.length) {
 			return posts[0];
@@ -116,16 +87,18 @@ export default class Posts {
 		return null;
 	}
 
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	static async getPostField(pid:string, field:string): Promise<object | null> {
+		const post: object = await Posts.getPostFields(pid, [field]);
+		if (post) {
+			return post[field] as object;
+		}
+		return null;
+	}
+
 	static async setPostField(pid:string, field:string, value:string):Promise<void> {
-		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		await Posts.setPostFields(pid, { [field]: value });
 	}
 
-	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	static async setPostFields(pid:string, data:object): Promise<void> {
 		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
