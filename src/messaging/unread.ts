@@ -3,6 +3,7 @@
 import * as db from '../database';
 import * as io from '../socket.io';
 
+// Interfaces para el tipado de funciones y/o variables
 interface Messaging {
   getUnreadCount: (uid: string | number) => Promise<number>;
   pushUnreadCount: (uids: Array<string | number>, data?: unknown) => void;
@@ -14,7 +15,6 @@ interface Messaging {
   roomExists: (roomId: number) => Promise<boolean>;
 }
 
-// Definir el tipo correcto para los datos que devuelven las llamadas a la base de datos
 interface TimestampData {
   [key: string]: string;
 }
@@ -23,6 +23,7 @@ interface MidData {
   score: number;
 }
 
+// Codigo principal
 module.exports = function (Messaging: Messaging) {
 	Messaging.getUnreadCount = async (uid: string | number) => {
 		if (!(parseInt(uid as string, 10) > 0)) {
