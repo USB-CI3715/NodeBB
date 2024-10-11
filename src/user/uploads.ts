@@ -25,71 +25,64 @@ const _validatePath = async (relativePaths: string | string[]): Promise<void> =>
     }
 };
 
-module.exports = function (User) {
-	User.associateUpload = async (uid, relativePath) => {
-		await _validatePath(relativePath);
-		await Promise.all([
-			db.sortedSetAdd(`uid:${uid}:uploads`, Date.now(), relativePath),
-			db.setObjectField(`upload:${md5(relativePath)}`, 'uid', uid),
-		]);
-	};
+module.exports = function (User: any) {
 
-	User.deleteUpload = async function (callerUid, uid, uploadNames) {
-		if (typeof uploadNames === 'string') {
-			uploadNames = [uploadNames];
-		} else if (!Array.isArray(uploadNames)) {
-			throw new Error(`[[error:wrong-parameter-type, uploadNames, ${typeof uploadNames}, array]]`);
-		}
+    User.associateUpload = async (uid: number, relativePath: string): Promise<void> => {
+        await _validatePath(relativePath);
+        await Promise.all([
+            db.sortedSetAdd(`uid:${uid}:uploads`, Date.now(), relativePath),
+            db.setObjectField(`upload:${md5(relativePath)}`, 'uid', uid),
+        ]);
+    };
 
-		await _validatePath(uploadNames);
+    User.deleteUpload = async function (callerUid: number, uid: number, uploadNames: string | string[]): Promise<void> {
+        if (typeof uploadNames === 'string') {
+            uploadNames = [uploadNames];
+        } else if (!Array.isArray(uploadNames)) {
+            throw new Error(`[[error:wrong-parameter-type, uploadNames, ${typeof uploadNames}, array]]`);
+        }
 
-		const [isUsersUpload, isAdminOrGlobalMod] = await Promise.all([
-			db.isSortedSetMembers(`uid:${callerUid}:uploads`, uploadNames),
-			User.isAdminOrGlobalMod(callerUid),
-		]);
-		if (!isAdminOrGlobalMod && !isUsersUpload.every(Boolean)) {
-			throw new Error('[[error:no-privileges]]');
-		}
+        await _validatePath(uploadNames);
 
-		await batch.processArray(uploadNames, async (uploadNames) => {
-			const fullPaths = uploadNames.map(path => _getFullPath(path));
+        const [isUsersUpload, isAdminOrGlobalMod] = await Promise.all([
+            db.isSortedSetMembers(`uid:${callerUid}:uploads`, uploadNames),
+            User.isAdminOrGlobalMod(callerUid),
+        ]);
 
-			await Promise.all(fullPaths.map(async (fullPath, idx) => {
-				winston.verbose(`[user/deleteUpload] Deleting ${uploadNames[idx]}`);
-				await Promise.all([
-					file.delete(fullPath),
-					file.delete(file.appendToFileName(fullPath, '-resized')),
-				]);
-				await Promise.all([
-					db.sortedSetRemove(`uid:${uid}:uploads`, uploadNames[idx]),
-					db.delete(`upload:${md5(uploadNames[idx])}`),
-				]);
-			}));
+        if (!isAdminOrGlobalMod && !isUsersUpload.every(Boolean)) {
+            throw new Error('[[error:no-privileges]]');
+        }
+
+        await batch.processArray(uploadNames, async (uploadNames: string[]) => {
+            const fullPaths = uploadNames.map(path => _getFullPath(path));
+
+            await Promise.all(fullPaths.map(async (fullPath, idx) => {
+                winston.verbose(`[user/deleteUpload] Deleting ${uploadNames[idx]}`);
+                await Promise.all([
+                    file.delete(fullPath),
+                    file.delete(file.appendToFileName(fullPath, '-resized')),
+                ]);
+                await Promise.all([
+                    db.sortedSetRemove(`uid:${uid}:uploads`, uploadNames[idx]),
+                    db.delete(`upload:${md5(uploadNames[idx])}`),
+                ]);
+            }));
 
 			// Dissociate the upload from pids, if any
 			const pids = await db.getSortedSetsMembers(uploadNames.map(relativePath => `upload:${md5(relativePath)}:pids`));
-			await Promise.all(pids.map(async (pids, idx) => Promise.all(
-				pids.map(async pid => posts.uploads.dissociate(pid, uploadNames[idx]))
-			)));
-		}, { batch: 50 });
-	};
+            await Promise.all(pids.map(async (pids, idx) => 
+                Promise.all(pids.map(async (pid) => posts.uploads.dissociate(pid, uploadNames[idx])))));
+        }, { batch: 50 });
+    };
 
-	User.collateUploads = async function (uid, archive) {
-		await batch.processSortedSet(`uid:${uid}:uploads`, (files, next) => {
-			files.forEach((file) => {
-				archive.file(_getFullPath(file), {
-					name: path.basename(file),
-				});
-			});
-
-			setImmediate(next);
-		}, { batch: 100 });
-	};
-basename(file),
-				});
-			});
-
-			setImmediate(next);
-		}, { batch: 100 });
-	};
+    User.collateUploads = async function (uid: number, archive: any): Promise<void> {
+        await batch.processSortedSet(`uid:${uid}:uploads`, (files: string[], next: Function) => {
+            files.forEach((file: string) => {
+                archive.file(_getFullPath(file), {
+                    name: path.basename(file),
+                });
+            });
+            setImmediate(next);
+        }, { batch: 100 });
+    };
 };
