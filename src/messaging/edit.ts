@@ -131,15 +131,12 @@ module.exports = function (Messaging: MessagingInterface) {
 
 	Messaging.canEdit = async (messageId: number, uid: number): Promise<void> => await canEditDelete(messageId, uid, 'edit');
 	Messaging.canDelete = async (messageId: number, uid: number): Promise<void> => await canEditDelete(messageId, uid, 'delete');
-
 	Messaging.canPin = async (roomId: number, uid: number): Promise<void> => {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const [isAdmin, isGlobalMod, inRoom, isRoomOwner] = await Promise.all([
-			// eslint-disable-next-line max-len
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 			user.isAdministrator(uid), user.isGlobalModerator(uid),
-			Messaging.isUserInRoom(uid, roomId),
-			Messaging.isRoomOwner(uid, roomId),
+			Messaging.isUserInRoom(uid, roomId), Messaging.isRoomOwner(uid, roomId),
 		]);
 
 		if (!isAdmin && !isGlobalMod && (!inRoom || !isRoomOwner)) throw new Error('[[error:no-privileges]]');

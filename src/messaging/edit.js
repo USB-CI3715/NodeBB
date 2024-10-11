@@ -184,11 +184,9 @@ module.exports = function (Messaging) {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, Promise.all([
-                        // eslint-disable-next-line max-len
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                         user.isAdministrator(uid), user.isGlobalModerator(uid),
-                        Messaging.isUserInRoom(uid, roomId),
-                        Messaging.isRoomOwner(uid, roomId),
+                        Messaging.isUserInRoom(uid, roomId), Messaging.isRoomOwner(uid, roomId),
                     ])];
                 case 1:
                     _a = _b.sent(), isAdmin = _a[0], isGlobalMod = _a[1], inRoom = _a[2], isRoomOwner = _a[3];
