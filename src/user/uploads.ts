@@ -82,7 +82,7 @@ module.exports = function (User: any) {
                     name: path.basename(file),
                 });
             });
-            setImmediate(next);
+            setImmediate(() => next());
         }, { batch: 100 });
     };
 };
