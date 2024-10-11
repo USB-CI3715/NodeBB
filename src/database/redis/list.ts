@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import type { RedisClientType } from 'redis';
+// import type { RedisClientType } from 'redis';
 import { execBatch } from './helpers';
 
 interface Module {
-    client: RedisClientType;
+    client: any;
     listPrepend(key: string, value: any): Promise<void>;
     listAppend(key: string, value: any): Promise<void>;
     listRemoveLast(key: string): Promise<string | null>;
