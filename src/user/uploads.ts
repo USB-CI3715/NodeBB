@@ -1,30 +1,28 @@
-'use strict';
+import path from 'path';
+import nconf from 'nconf';
+import winston from 'winston';
+import crypto from 'crypto';
 
-const path = require('path');
-const nconf = require('nconf');
-const winston = require('winston');
-const crypto = require('crypto');
+import db from '../database';
+import posts from '../posts';
+import file from '../file';
+import batch from '../batch';
 
-const db = require('../database');
-const posts = require('../posts');
-const file = require('../file');
-const batch = require('../batch');
+const md5 = (filename: string): string => crypto.createHash('md5').update(filename).digest('hex');
+const _getFullPath = (relativePath: string): string => path.resolve(nconf.get('upload_path'), relativePath);
+const _validatePath = async (relativePaths: string | string[]): Promise<void> => {
+    if (typeof relativePaths === 'string') {
+        relativePaths = [relativePaths];
+    } else if (!Array.isArray(relativePaths)) {
+        throw new Error(`[[error:wrong-parameter-type, relativePaths, ${typeof relativePaths}, array]]`);
+    }
 
-const md5 = filename => crypto.createHash('md5').update(filename).digest('hex');
-const _getFullPath = relativePath => path.resolve(nconf.get('upload_path'), relativePath);
-const _validatePath = async (relativePaths) => {
-	if (typeof relativePaths === 'string') {
-		relativePaths = [relativePaths];
-	} else if (!Array.isArray(relativePaths)) {
-		throw new Error(`[[error:wrong-parameter-type, relativePaths, ${typeof relativePaths}, array]]`);
-	}
+    const fullPaths = relativePaths.map(path => _getFullPath(path));
+    const exists = await Promise.all(fullPaths.map(async (fullPath) => file.exists(fullPath)));
 
-	const fullPaths = relativePaths.map(path => _getFullPath(path));
-	const exists = await Promise.all(fullPaths.map(async fullPath => file.exists(fullPath)));
-
-	if (!fullPaths.every(fullPath => fullPath.startsWith(nconf.get('upload_path'))) || !exists.every(Boolean)) {
-		throw new Error('[[error:invalid-path]]');
-	}
+    if (!fullPaths.every(fullPath => fullPath.startsWith(nconf.get('upload_path'))) || !exists.every(Boolean)) {
+        throw new Error('[[error:invalid-path]]');
+    }
 };
 
 module.exports = function (User) {
@@ -81,6 +79,13 @@ module.exports = function (User) {
 			files.forEach((file) => {
 				archive.file(_getFullPath(file), {
 					name: path.basename(file),
+				});
+			});
+
+			setImmediate(next);
+		}, { batch: 100 });
+	};
+basename(file),
 				});
 			});
 
