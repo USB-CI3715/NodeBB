@@ -78,7 +78,7 @@ function toExport(Posts:Posts):void {
 	};
 
 	Posts.getPostsData = async function (pids:string[]):Promise<object[]> {
-		return await Posts.getPostsFields(pids, [])
+		return await Posts.getPostsFields(pids, []);
 	};
 
 	Posts.getPostFields = async function (pid:string, fields:string[]): Promise<object | null> {
