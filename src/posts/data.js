@@ -42,7 +42,7 @@ function modifyPost(post, fields) {
 };
 
 module.exports = function (Posts){
-    Posts.getPostsFields = function(pids, fields) {
+    Posts.getPostsFields = async function(pids, fields) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!Array.isArray(pids) || !pids.length) {
                 return [];
@@ -69,12 +69,12 @@ module.exports = function (Posts){
             return posts && posts.length ? posts[0] : null;
         });
     };
-    Posts.getPostsData = function(pids) {
+    Posts.getPostsData = async function(pids) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield Posts.getPostsFields(pids, []);
         });
     };
-    Posts.getPostFields = function(pid, fields) {
+    Posts.getPostFields = async function(pid, fields) {
         return __awaiter(this, void 0, void 0, function* () {
             const posts = yield Posts.getPostsFields([pid], fields);
             if (posts && posts.length) {
@@ -83,7 +83,7 @@ module.exports = function (Posts){
             return null;
         });
     };
-    Posts.getPostField = function(pid, field) {
+    Posts.getPostField = async function(pid, field) {
         return __awaiter(this, void 0, void 0, function* () {
             const post = yield Posts.getPostFields(pid, [field]);
             if (post) {
@@ -92,12 +92,12 @@ module.exports = function (Posts){
             return null;
         });
     };
-    Posts.setPostField = function(pid, field, value) {
+    Posts.setPostField = async function(pid, field, value) {
         return __awaiter(this, void 0, void 0, function* () {
             yield Posts.setPostFields(pid, { [field]: value });
         });
     };
-    Posts.setPostFields = function(pid, data) {
+    Posts.setPostFields = async function(pid, data) {
         return __awaiter(this, void 0, void 0, function* () {
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
