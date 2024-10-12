@@ -100,7 +100,7 @@ function toExport(Posts) {
             yield (0, database_1.setObject)(`post:${pid}`, data);
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            plugins_1.hooks.fire('action:post.setFields', { data: Object.assign(Object.assign({}, data), { pid }) });
+            yield plugins_1.hooks.fire('action:post.setFields', { data: Object.assign(Object.assign({}, data), { pid }) });
         });
     };
 }

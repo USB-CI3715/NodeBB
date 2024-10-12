@@ -78,7 +78,7 @@ function toExport(Posts:Posts):void {
 	};
 
 	Posts.getPostsData = async function (pids:string[]):Promise<object[]> {
-		return await Posts.getPostsFields(pids, []);
+		return await Posts.getPostsFields(pids, [])
 	};
 
 	Posts.getPostFields = async function (pid:string, fields:string[]): Promise<object | null> {
@@ -107,7 +107,7 @@ function toExport(Posts:Posts):void {
 		await setObject(`post:${pid}`, data);
 		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		hooks.fire('action:post.setFields', { data: { ...data, pid } });
+		await hooks.fire('action:post.setFields', { data: { ...data, pid } });
 	};
 }
 
