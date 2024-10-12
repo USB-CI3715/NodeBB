@@ -44,7 +44,6 @@ function modifyPost(post:Post, fields:string[]): void {
 		}
 		if (post.hasOwnProperty('edited')) {
 			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-			// eslint-disable-next-line max-len
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
 			post.editedISO = post.edited !== 0 ? toISOString(post.edited) : '';
 		}
