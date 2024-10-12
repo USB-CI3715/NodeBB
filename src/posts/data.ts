@@ -47,7 +47,7 @@ function modifyPost(post:Post, fields:string[]): void {
 	}
 }
 
-export default class Posts {
+export default class Postss {
 	static async getPostsFields(pids:string[], fields: string[]): Promise<object[]> {
 		if (!Array.isArray(pids) || !pids.length) {
 			return [];
@@ -69,16 +69,16 @@ export default class Posts {
 	}
 
 	static async getPostData(pid:string): Promise<object> {
-		const posts:object[] = await Posts.getPostsFields([pid], []);
+		const posts:object[] = await Postss.getPostsFields([pid], []);
 		return posts && posts.length ? posts[0] : null;
 	}
 
 	static async getPostsData(pids:string[]):Promise<object[]> {
-		return await Posts.getPostsFields(pids, []);
+		return await Postss.getPostsFields(pids, []);
 	}
 
 	static async getPostFields(pid:string, fields:string[]): Promise<object | null> {
-		const posts: object[] = await Posts.getPostsFields([pid], fields);
+		const posts: object[] = await Postss.getPostsFields([pid], fields);
 		if (posts && posts.length) {
 			return posts[0];
 		}
@@ -86,7 +86,7 @@ export default class Posts {
 	}
 
 	static async getPostField(pid:string, field:string): Promise<object | null> {
-		const post: object = await Posts.getPostFields(pid, [field]);
+		const post: object = await Postss.getPostFields(pid, [field]);
 		if (post) {
 			return post[field] as object;
 		}
@@ -94,7 +94,7 @@ export default class Posts {
 	}
 
 	static async setPostField(pid:string, field:string, value:string):Promise<void> {
-		await Posts.setPostFields(pid, { [field]: value });
+		await Postss.setPostFields(pid, { [field]: value });
 	}
 
 	static async setPostFields(pid:string, data:object): Promise<void> {
