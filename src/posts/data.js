@@ -1,5 +1,4 @@
 "use strict";
-
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -9,11 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
-
 const database_1 = require("../database");
-const hooks = require("../plugins/hooks");
-const utils = require('../utils');
+const plugins_1 = require("../plugins");
+const utils_1 = require("../utils");
 const intFields = [
     'uid', 'pid', 'tid', 'deleted', 'timestamp',
     'upvotes', 'downvotes', 'deleterUid', 'edited',
@@ -29,31 +26,31 @@ function modifyPost(post, fields) {
         }
         if (post.hasOwnProperty('timestamp')) {
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            post.timestampISO = utils.toISOString(post.timestamp);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+            post.timestampISO = (0, utils_1.toISOString)(post.timestamp);
         }
         if (post.hasOwnProperty('edited')) {
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            post.editedISO = post.edited !== 0 ? utils.toISOString(post.edited) : '';
+            // eslint-disable-next-line max-len
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+            post.editedISO = post.edited !== 0 ? (0, utils_1.toISOString)(post.edited) : '';
         }
     }
-};
-
-module.exports = function (Posts){
-    Posts.getPostsFields = async function(pids, fields) {
+}
+function toExport(Posts) {
+    Posts.getPostsFields = function (pids, fields) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!Array.isArray(pids) || !pids.length) {
                 return [];
             }
             const keys = pids.map(pid => `post:${pid}`);
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            const postData = yield database_1.getObjects(keys, fields);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+            const postData = yield (0, database_1.getObjects)(keys, fields);
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
             // eslint-disable-next-line max-len
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-            const result = yield hooks.fire('filter:post.getFields', {
+            const result = yield plugins_1.hooks.fire('filter:post.getFields', {
                 pids: pids,
                 posts: postData,
                 fields: fields,
@@ -62,18 +59,18 @@ module.exports = function (Posts){
             return result.posts;
         });
     };
-    Posts.getPostData = async function(pid) {
+    Posts.getPostData = function (pid) {
         return __awaiter(this, void 0, void 0, function* () {
             const posts = yield Posts.getPostsFields([pid], []);
             return posts && posts.length ? posts[0] : null;
         });
     };
-    Posts.getPostsData = async function(pids) {
+    Posts.getPostsData = function (pids) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield Posts.getPostsFields(pids, []);
         });
     };
-    Posts.getPostFields = async function(pid, fields) {
+    Posts.getPostFields = function (pid, fields) {
         return __awaiter(this, void 0, void 0, function* () {
             const posts = yield Posts.getPostsFields([pid], fields);
             if (posts && posts.length) {
@@ -82,7 +79,7 @@ module.exports = function (Posts){
             return null;
         });
     };
-    Posts.getPostField = async function(pid, field) {
+    Posts.getPostField = function (pid, field) {
         return __awaiter(this, void 0, void 0, function* () {
             const post = yield Posts.getPostFields(pid, [field]);
             if (post) {
@@ -91,19 +88,20 @@ module.exports = function (Posts){
             return null;
         });
     };
-    Posts.setPostField = async function(pid, field, value) {
+    Posts.setPostField = function (pid, field, value) {
         return __awaiter(this, void 0, void 0, function* () {
             yield Posts.setPostFields(pid, { [field]: value });
         });
     };
-    Posts.setPostFields = async function(pid, data) {
+    Posts.setPostFields = function (pid, data) {
         return __awaiter(this, void 0, void 0, function* () {
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             yield (0, database_1.setObject)(`post:${pid}`, data);
             // La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            hooks.fire('action:post.setFields', { data: Object.assign(Object.assign({}, data), { pid }) });
+            plugins_1.hooks.fire('action:post.setFields', { data: Object.assign(Object.assign({}, data), { pid }) });
         });
     };
 }
+module.exports = toExport;
