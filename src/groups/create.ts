@@ -1,7 +1,7 @@
 import meta from '../meta';
-import plugins from '../plugins';
+import * as plugins from '../plugins';
 import slugify from '../slugify';
-import db from '../database';
+import * as db from '../database';
 
 interface GroupData {
 	name: string;
@@ -40,7 +40,7 @@ interface GroupsInterface {
 	getGroupData: (name: string) => Promise<GroupDataComplete>;
 }
 
-export default function (Groups: GroupsInterface) {
+function createGroup(Groups: GroupsInterface) {
 	function isSystemGroup(data: GroupData): boolean {
 		return data.system === true || parseInt(data.system as string, 10) === 1 ||
 			Groups.systemGroups.includes(data.name) ||
@@ -146,3 +146,6 @@ export default function (Groups: GroupsInterface) {
 		}
 	};
 }
+
+export = createGroup
+
