@@ -47,6 +47,7 @@ export default function (Categories: any) {
 			cids: cids,
 			uid: uid,
 		});
+		
 		cids = await privileges.categories.filterCids('find', result.cids, uid);
 
 		const searchResult: SearchResult = {
