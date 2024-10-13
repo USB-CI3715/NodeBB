@@ -1,5 +1,5 @@
-'use strict';
-
+// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 import _ from 'lodash';
 import db from '../database';
 import user from '../user';
@@ -11,12 +11,46 @@ interface Topic {
 	timestamp: number;
 }
 
-module.exports = function (Topics: any) {
+export default function Suggested(Topics: any) {
+    async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
+		let tids = cutoff === 0 ?
+			await db.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) :
+			await db.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
+		tids = tids.filter((_tid: string) => _tid !== tid); // remove self
+		return _.shuffle(_.uniq(tids)).slice(0, 10);
+	}
+
+	async function getSearchTids(tid: string, title: string, cid: string, cutoff: number): Promise<string[]> {
+		let { ids: tids } = await plugins.hooks.fire('filter:search.query', {
+			index: 'topic',
+			content: title,
+			matchWords: 'any',
+			cid: [cid],
+			limit: 20,
+			ids: [],
+		});
+		tids = tids.filter((_tid: string) => String(_tid) !== tid); // remove self
+		if (cutoff) {
+			const topicData = await Topics.getTopicsFields(tids, ['tid', 'timestamp']);
+			const now = Date.now();
+			tids = topicData.filter((t: Topic) => t && t.timestamp > now - cutoff).map((t: Topic) => t.tid);
+		}
+
+		return _.shuffle(tids).slice(0, 10).map(String);
+	}
+
+	async function getCategoryTids(tid: string, cid: string, cutoff: number): Promise<string[]> {
+		const tids = cutoff === 0 ?
+			await db.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) :
+			await db.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff);
+		return _.shuffle(tids.filter((_tid: string) => _tid !== tid));
+	}
+
 	Topics.getSuggestedTopics = async function (
-		tid: string, 
-		uid: string, 
-		start: number, 
-		stop: number, 
+		tid: string,
+		uid: string,
+		start: number,
+		stop: number,
 		cutoff: number = 0
 	): Promise<Topic[]> {
 		let tids: string[] = [];
@@ -51,38 +85,4 @@ module.exports = function (Topics: any) {
 		Topics.calculateTopicIndices(topicData, start);
 		return topicData;
 	};
-
-	async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
-		let tids = cutoff === 0 ?
-			await db.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) :
-			await db.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
-		tids = tids.filter((_tid: string) => _tid !== tid); // remove self
-		return _.shuffle(_.uniq(tids)).slice(0, 10);
-	}
-
-	async function getSearchTids(tid: string, title: string, cid: string, cutoff: number): Promise<string[]> {
-		let { ids: tids } = await plugins.hooks.fire('filter:search.query', {
-			index: 'topic',
-			content: title,
-			matchWords: 'any',
-			cid: [cid],
-			limit: 20,
-			ids: [],
-		});
-		tids = tids.filter((_tid: string) => String(_tid) !== tid); // remove self
-		if (cutoff) {
-			const topicData = await Topics.getTopicsFields(tids, ['tid', 'timestamp']);
-			const now = Date.now();
-			tids = topicData.filter((t: Topic) => t && t.timestamp > now - cutoff).map((t: Topic) => t.tid);
-		}
-
-		return _.shuffle(tids).slice(0, 10).map(String);
-	}
-
-	async function getCategoryTids(tid: string, cid: string, cutoff: number): Promise<string[]> {
-		const tids = cutoff === 0 ?
-			await db.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) :
-			await db.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff);
-		return _.shuffle(tids.filter((_tid: string) => _tid !== tid));
-	}
-};
+}
