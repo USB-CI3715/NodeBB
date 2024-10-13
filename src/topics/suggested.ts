@@ -1,5 +1,3 @@
-// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 import _ from 'lodash';
 import db from '../database';
 import user from '../user';
