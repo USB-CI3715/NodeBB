@@ -1,107 +1,109 @@
-'use strict';
-
-const categories = require('../../categories');
-const meta = require('../../meta');
-const api = require('../../api');
-
-const helpers = require('../helpers');
-
-const Categories = module.exports;
-
-Categories.list = async (req, res) => {
-	helpers.formatApiResponse(200, res, await api.categories.list(req));
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-
-Categories.get = async (req, res) => {
-	helpers.formatApiResponse(200, res, await api.categories.get(req, req.params));
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.delete = exports.setModerator = exports.setPrivilege = exports.getPrivileges = exports.setWatchState = exports.getTopics = exports.getChildren = exports.getPosts = exports.getTopicCount = exports.deleteCategories = exports.update = exports.create = exports.get = exports.list = void 0;
+const categories_1 = __importDefault(require("../../categories"));
+const meta_1 = __importDefault(require("../../meta"));
+const api_1 = __importDefault(require("../../api"));
+const helpers_1 = __importDefault(require("../helpers"));
+const list = async (req, res) => {
+    await helpers_1.default.formatApiResponse(200, res, await api_1.default.categories.list(req));
 };
-
-Categories.create = async (req, res) => {
-	const response = await api.categories.create(req, req.body);
-	helpers.formatApiResponse(200, res, response);
+exports.list = list;
+const get = async (req, res) => {
+    await helpers_1.default.formatApiResponse(200, res, await api_1.default.categories.get(req, req.params));
 };
-
-Categories.update = async (req, res) => {
-	await api.categories.update(req, {
-		cid: req.params.cid,
-		values: req.body,
-	});
-
-	const categoryObjs = await categories.getCategories([req.params.cid]);
-	helpers.formatApiResponse(200, res, categoryObjs[0]);
+exports.get = get;
+const create = async (req, res) => {
+    const response = await api_1.default.categories.create(req, req.body);
+    await helpers_1.default.formatApiResponse(200, res, response);
 };
-
-Categories.delete = async (req, res) => {
-	await api.categories.delete(req, { cid: req.params.cid });
-	helpers.formatApiResponse(200, res);
+exports.create = create;
+const update = async (req, res) => {
+    await api_1.default.categories.update(req, {
+        cid: req.params.cid,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        values: req.body,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const categoryObjs = await categories_1.default.getCategories([req.params.cid]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    await helpers_1.default.formatApiResponse(200, res, categoryObjs[0]);
 };
-
-Categories.getTopicCount = async (req, res) => {
-	helpers.formatApiResponse(200, res, await api.categories.getTopicCount(req, { ...req.params }));
+exports.update = update;
+const deleteCategories = async (req, res) => {
+    await api_1.default.categories.delete(req, { cid: req.params.cid });
+    await helpers_1.default.formatApiResponse(200, res);
 };
-
-Categories.getPosts = async (req, res) => {
-	const posts = await api.categories.getPosts(req, { ...req.params });
-	helpers.formatApiResponse(200, res, { posts });
+exports.deleteCategories = deleteCategories;
+exports.delete = exports.deleteCategories;
+const getTopicCount = async (req, res) => {
+    await helpers_1.default.formatApiResponse(200, res, await api_1.default.categories.getTopicCount(req, Object.assign({}, req.params)));
 };
-
-Categories.getChildren = async (req, res) => {
-	const { cid } = req.params;
-	const { start } = req.query;
-	helpers.formatApiResponse(200, res, await api.categories.getChildren(req, { cid, start }));
+exports.getTopicCount = getTopicCount;
+const getPosts = async (req, res) => {
+    const posts = await api_1.default.categories.getPosts(req, Object.assign({}, req.params));
+    await helpers_1.default.formatApiResponse(200, res, { posts });
 };
-
-Categories.getTopics = async (req, res) => {
-	const { cid } = req.params;
-	const result = await api.categories.getTopics(req, { ...req.query, cid });
-
-	helpers.formatApiResponse(200, res, result);
+exports.getPosts = getPosts;
+const getChildren = async (req, res) => {
+    const { cid } = req.params;
+    const { start } = req.query;
+    await helpers_1.default.formatApiResponse(200, res, await api_1.default.categories.getChildren(req, { cid, start }));
 };
-
-Categories.setWatchState = async (req, res) => {
-	const { cid } = req.params;
-	let { uid, state } = req.body;
-
-	if (req.method === 'DELETE') {
-		// DELETE is always setting state to system default in acp
-		state = categories.watchStates[meta.config.categoryWatchState];
-	} else if (Object.keys(categories.watchStates).includes(state)) {
-		state = categories.watchStates[state]; // convert to integer for backend processing
-	} else {
-		throw new Error('[[error:invalid-data]]');
-	}
-
-	const { cids: modified } = await api.categories.setWatchState(req, { cid, state, uid });
-
-	helpers.formatApiResponse(200, res, { modified });
+exports.getChildren = getChildren;
+const getTopics = async (req, res) => {
+    const { cid } = req.params;
+    const result = await api_1.default.categories.getTopics(req, Object.assign(Object.assign({}, req.query), { cid }));
+    await helpers_1.default.formatApiResponse(200, res, result);
 };
-
-Categories.getPrivileges = async (req, res) => {
-	const privilegeSet = await api.categories.getPrivileges(req, { cid: req.params.cid });
-	helpers.formatApiResponse(200, res, privilegeSet);
+exports.getTopics = getTopics;
+const setWatchState = async (req, res) => {
+    const { cid } = req.params;
+    let { uid, state } = req.body;
+    if (req.method === 'DELETE') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        state = categories_1.default.watchStates[meta_1.default.config.categoryWatchState];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
+    }
+    else if (Object.keys(categories_1.default.watchStates).includes(state)) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        state = categories_1.default.watchStates[state];
+    }
+    else {
+        throw new Error('[[error:invalid-data]]');
+    }
+    const { cids: modified } = await api_1.default.categories.setWatchState(req, { cid, state, uid });
+    await helpers_1.default.formatApiResponse(200, res, { modified });
 };
-
-Categories.setPrivilege = async (req, res) => {
-	const { cid, privilege } = req.params;
-
-	await api.categories.setPrivilege(req, {
-		cid,
-		privilege,
-		member: req.body.member,
-		set: req.method === 'PUT',
-	});
-
-	const privilegeSet = await api.categories.getPrivileges(req, { cid: req.params.cid });
-	helpers.formatApiResponse(200, res, privilegeSet);
+exports.setWatchState = setWatchState;
+const getPrivileges = async (req, res) => {
+    const privilegeSet = await api_1.default.categories.getPrivileges(req, { cid: req.params.cid });
+    await helpers_1.default.formatApiResponse(200, res, privilegeSet);
 };
-
-Categories.setModerator = async (req, res) => {
-	await api.categories.setModerator(req, {
-		cid: req.params.cid,
-		member: req.params.uid,
-		set: req.method === 'PUT',
-	});
-
-	const privilegeSet = await api.categories.getPrivileges(req, { cid: req.params.cid });
-	helpers.formatApiResponse(200, res, privilegeSet);
+exports.getPrivileges = getPrivileges;
+const setPrivilege = async (req, res) => {
+    const { cid, privilege } = req.params;
+    await api_1.default.categories.setPrivilege(req, {
+        cid,
+        privilege,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        member: req.body.member,
+        set: req.method === 'PUT',
+    });
+    const privilegeSet = await api_1.default.categories.getPrivileges(req, { cid: req.params.cid });
+    await helpers_1.default.formatApiResponse(200, res, privilegeSet);
 };
+exports.setPrivilege = setPrivilege;
+const setModerator = async (req, res) => {
+    await api_1.default.categories.setModerator(req, {
+        cid: req.params.cid,
+        member: req.params.uid,
+        set: req.method === 'PUT',
+    });
+    const privilegeSet = await api_1.default.categories.getPrivileges(req, { cid: req.params.cid });
+    await helpers_1.default.formatApiResponse(200, res, privilegeSet);
+};
+exports.setModerator = setModerator;
