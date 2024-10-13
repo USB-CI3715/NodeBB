@@ -1,9 +1,9 @@
 'use strict';
 
-import _ from 'lodash';
-import privileges from '../privileges';
-import plugins from '../plugins';
-import db from '../database';
+import * as _ from 'lodash';
+import * as privileges from '../privileges';
+import * as plugins from '../plugins';
+import * as db from '../database';
 
 
 interface SearchData {
