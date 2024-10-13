@@ -1,10 +1,8 @@
-'use strict';
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 import * as _ from 'lodash';
 import * as privileges from '../privileges';
 import * as plugins from '../plugins';
 import * as db from '../database';
-
 
 interface SearchData {
 	query?: string;
@@ -13,7 +11,7 @@ interface SearchData {
 	paginate?: boolean;
 	resultsPerPage?: number;
 	hardCap?: number;
-	qs?: any;
+	qs?: unknown;
 }
 
 interface Category {
@@ -31,7 +29,15 @@ interface SearchResult {
 	categories?: Category[];
 }
 
-export default function (Categories: any) {
+interface CategoriesInterface {
+	search?: (data: SearchData) => Promise<SearchResult>;
+	getCategories: (cids: number[]) => Promise<Category[]>;
+	getTree: (categories: Category[], depth: number) => void;
+	getRecentTopicReplies: (categories: Category[], uid: number, qs: unknown) => Promise<void>;
+	getChildrenCids: (cid: number) => Promise<number[]>;
+}
+
+export default function (Categories: CategoriesInterface) {
 	Categories.search = async function (data: SearchData): Promise<SearchResult> {
 		const query = data.query || '';
 		const page = data.page || 1;
