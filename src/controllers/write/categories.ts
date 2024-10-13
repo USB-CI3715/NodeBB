@@ -2,6 +2,7 @@ import categories from '../../categories';
 import meta from '../../meta';
 import api from '../../api';
 import helpers from '../helpers';
+// Interfaces
 
 interface Params {
     cid: string;
