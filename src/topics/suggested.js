@@ -13,8 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Suggested;
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 const lodash_1 = __importDefault(require("lodash"));
@@ -28,7 +26,6 @@ function Suggested(Topics) {
             let tids = cutoff === 0 ?
                 yield database_1.default.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) :
                 yield database_1.default.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
-            // Solución: Filtrar solo si el tipo de _tid es válido
             tids = tids.filter((_tid) => typeof _tid === 'string' && _tid !== tid);
             return lodash_1.default.shuffle(lodash_1.default.uniq(tids)).slice(0, 10);
         });
@@ -41,11 +38,10 @@ function Suggested(Topics) {
                 matchWords: 'any',
                 cid: [cid],
                 limit: 20,
-                ids: [], // especificamos el tipo
+                ids: [],
             });
-            tids = tids.filter((_tid) => String(_tid) !== tid); // remove self
+            tids = tids.filter((_tid) => String(_tid) !== tid);
             if (cutoff) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 const topicData = yield Topics.getTopicsByTids(tids, ['tid', 'timestamp']);
                 const now = Date.now();
                 tids = topicData.filter((t) => t && t.timestamp > now - cutoff).map((t) => t.tid);
@@ -82,10 +78,10 @@ function Suggested(Topics) {
                 categoryTids = yield getCategoryTids(tid, cid, cutoff);
             }
             tids = lodash_1.default.shuffle(lodash_1.default.uniq(tids.concat(categoryTids)));
-            tids = yield privileges_1.default.topics.filterTids('topics:read', tids, uid);
+            tids = (yield privileges_1.default.topics.filterTids('topics:read', tids, uid));
             let topicData = yield Topics.getTopicsByTids(tids, uid);
             topicData = topicData.filter((topic) => topic && String(topic.tid) !== tid);
-            topicData = yield user_1.default.blocks.filter(uid, topicData);
+            topicData = (yield user_1.default.blocks.filter(uid, topicData));
             topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
                 .sort((t1, t2) => t2.timestamp - t1.timestamp);
             Topics.calculateTopicIndices(topicData, start);

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import _ from 'lodash';
@@ -35,12 +33,11 @@ interface TopicsType {
 export default function Suggested(Topics: TopicsType) {
 	async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
 		let tids: string[] = cutoff === 0 ?
-			await db.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) :
-			await db.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
+			await db.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) as string[] :
+			await db.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff) as string[];
 
-		// Solución: Filtrar solo si el tipo de _tid es válido
 		tids = tids.filter((_tid: string) => typeof _tid === 'string' && _tid !== tid);
-		return _.shuffle(_.uniq(tids)).slice(0, 10);
+		return _.shuffle(_.uniq(tids)).slice(0, 10) as string[];
 	}
 
 	async function getSearchTids(tid: string, title: string, cid: string, cutoff: number): Promise<string[]> {
@@ -50,24 +47,23 @@ export default function Suggested(Topics: TopicsType) {
 			matchWords: 'any',
 			cid: [cid],
 			limit: 20,
-			ids: [] as string[], // especificamos el tipo
-		});
-		tids = tids.filter((_tid: string) => String(_tid) !== tid); // remove self
+			ids: [] as string[],
+		}) as { ids: string[] };
+		tids = tids.filter((_tid: string) => String(_tid) !== tid);
 		if (cutoff) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			const topicData = await Topics.getTopicsByTids(tids, ['tid', 'timestamp']);
 			const now = Date.now();
 			tids = topicData.filter((t: Topic) => t && t.timestamp > now - cutoff).map((t: Topic) => t.tid);
 		}
 
-		return _.shuffle(tids).slice(0, 10).map(String);
+		return _.shuffle(tids).slice(0, 10).map(String) as string[];
 	}
 
 	async function getCategoryTids(tid: string, cid: string, cutoff: number): Promise<string[]> {
 		const tids = cutoff === 0 ?
-			await db.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) :
-			await db.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff);
-		return _.shuffle(tids.filter((_tid: string) => _tid !== tid));
+			await db.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) as string[] :
+			await db.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff) as string[];
+		return _.shuffle(tids.filter((_tid: string) => _tid !== tid)) as string[];
 	}
 
 	Topics.getSuggestedTopics = async function (
@@ -92,18 +88,18 @@ export default function Suggested(Topics: TopicsType) {
 			getSearchTids(tid, title, cid, cutoff),
 		]);
 
-		tids = _.uniq(tagTids.concat(searchTids));
+		tids = _.uniq(tagTids.concat(searchTids)) as string[];
 
 		let categoryTids: string[] = [];
 		if (stop !== -1 && tids.length < stop - start + 1) {
 			categoryTids = await getCategoryTids(tid, cid, cutoff);
 		}
-		tids = _.shuffle(_.uniq(tids.concat(categoryTids)));
-		tids = await privileges.topics.filterTids('topics:read', tids, uid);
+		tids = _.shuffle(_.uniq(tids.concat(categoryTids))) as string[];
+		tids = await privileges.topics.filterTids('topics:read', tids, uid) as string[];
 
 		let topicData = await Topics.getTopicsByTids(tids, uid);
 		topicData = topicData.filter((topic: Topic) => topic && String(topic.tid) !== tid);
-		topicData = await user.blocks.filter(uid, topicData);
+		topicData = await user.blocks.filter(uid, topicData) as Topic[];
 		topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
 			.sort((t1: Topic, t2: Topic) => t2.timestamp - t1.timestamp);
 		Topics.calculateTopicIndices(topicData, start);
