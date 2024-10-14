@@ -1,12 +1,12 @@
-import _ from 'lodash';
-import meta from '../meta';
-import db from '../database';
-import plugins from '../plugins';
-import user from '../user';
-import topics from '../topics';
-import categories from '../categories';
-import groups from '../groups';
-import privileges from '../privileges';
+import _ = require('lodash');
+import meta = require('../meta');
+import db = require('../database');
+import plugins = require('../plugins');
+import user = require('../user');
+import topics = require('../topics');
+import categories = require('../categories');
+import groups = require('../groups');
+import privileges = require('../privileges');
 
 
 interface PostData {
