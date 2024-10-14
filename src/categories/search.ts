@@ -1,8 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 import * as _ from 'lodash';
-import * as privileges from '../privileges';
-import * as plugins from '../plugins';
-import * as db from '../database';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+import privileges from '../privileges';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+import plugins from '../plugins';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+import db from '../database';
 
 interface SearchData {
 	query?: string;
@@ -38,6 +41,31 @@ interface CategoriesInterface {
 }
 
 export default function (Categories: CategoriesInterface) {
+	async function findCids(query: string, hardCap?: number): Promise<number[]> {
+		if (!query || query.length < 2) {
+			return [];
+		}
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const data = await db.getSortedSetScan({
+			key: 'categories:name',
+			match: `*${query.toLowerCase()}*`,
+			limit: hardCap || 500,
+		}) as string[];
+
+		return data.map(item => parseInt(item.split(':').pop() || '0', 10));
+	}
+
+	async function getChildrenCids(cids: number[], uid: number): Promise<number[]> {
+		const childrenCidsPromises = cids.map(async (cid: number) => await Categories.getChildrenCids(cid));
+
+		const childrenCids = await Promise.all(childrenCidsPromises);
+		// Ignorar errores de seguridad para la llamada a filterCids
+		/* eslint-disable-next-line @typescript-eslint/no-unsafe-call,
+		@typescript-eslint/no-unsafe-member-access,
+		@typescript-eslint/no-unsafe-return */
+		return await privileges.categories.filterCids('find', _.flatten(childrenCids), uid);
+	}
+
 	Categories.search = async function (data: SearchData): Promise<SearchResult> {
 		const query = data.query || '';
 		const page = data.page || 1;
@@ -48,13 +76,15 @@ export default function (Categories: CategoriesInterface) {
 
 		let cids = await findCids(query, data.hardCap);
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		const result = await plugins.hooks.fire('filter:categories.search', {
-			data: data,
-			cids: cids,
-			uid: uid,
-		});
-		
-		cids = await privileges.categories.filterCids('find', result.cids, uid);
+			data,
+			cids,
+			uid,
+		}) as { cids: number[] };
+
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		cids = await privileges.categories.filterCids('find', result.cids, uid) as number[];
 
 		const searchResult: SearchResult = {
 			matchCount: cids.length,
@@ -74,6 +104,7 @@ export default function (Categories: CategoriesInterface) {
 
 		Categories.getTree(categoryData, 0);
 		await Categories.getRecentTopicReplies(categoryData, uid, data.qs);
+
 		categoryData.forEach((category: Category) => {
 			if (category && Array.isArray(category.children)) {
 				category.children = category.children.slice(0, category.subCategoriesPerPage);
@@ -83,9 +114,7 @@ export default function (Categories: CategoriesInterface) {
 			}
 		});
 
-		categoryData.sort((c1: Category, c2
-			: Category
-		) => {
+		categoryData.sort((c1: Category, c2: Category) => {
 			if (c1.parentCid !== c2.parentCid) {
 				return c1.parentCid - c2.parentCid;
 			}
@@ -95,23 +124,5 @@ export default function (Categories: CategoriesInterface) {
 		searchResult.timing = (process.hrtime(startTime)[1] / 1000000).toFixed(2);
 		searchResult.categories = categoryData.filter((c: Category) => cids.includes(c.cid));
 		return searchResult;
-		
 	};
-
-	async function findCids(query: string, hardCap?: number): Promise<number[]> {
-		if (!query || String(query).length < 2) {
-			return [];
-		}
-		const data: string[] = await db.getSortedSetScan({
-			key: 'categories:name',
-			match: `*${query.toLowerCase()}*`,
-			limit: hardCap || 500,
-		});
-		return data.map((data: string) => parseInt(data.split(':').pop()!, 10));
-	}
-
-	async function getChildrenCids(cids: number[], uid: number): Promise<number[]> {
-		const childrenCids = await Promise.all(cids.map((cid: number)=> Categories.getChildrenCids(cid)));
-		return await privileges.categories.filterCids('find', _.flatten(childrenCids), uid);
-	}
-};
+}

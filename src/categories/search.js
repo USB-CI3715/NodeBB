@@ -39,10 +39,61 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = default_1;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 var _ = require("lodash");
-var privileges = require("../privileges");
-var plugins = require("../plugins");
-var db = require("../database");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+var privileges_1 = require("../privileges");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+var plugins_1 = require("../plugins");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+var database_1 = require("../database");
 function default_1(Categories) {
+    function findCids(query, hardCap) {
+        return __awaiter(this, void 0, void 0, function () {
+            var data;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!query || query.length < 2) {
+                            return [2 /*return*/, []];
+                        }
+                        return [4 /*yield*/, database_1.default.getSortedSetScan({
+                                key: 'categories:name',
+                                match: "*".concat(query.toLowerCase(), "*"),
+                                limit: hardCap || 500,
+                            })];
+                    case 1:
+                        data = _a.sent();
+                        return [2 /*return*/, data.map(function (item) { return parseInt(item.split(':').pop() || '0', 10); })];
+                }
+            });
+        });
+    }
+    function getChildrenCids(cids, uid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var childrenCidsPromises, childrenCids;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        childrenCidsPromises = cids.map(function (cid) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, Categories.getChildrenCids(cid)];
+                                case 1: return [2 /*return*/, _a.sent()];
+                            }
+                        }); }); });
+                        return [4 /*yield*/, Promise.all(childrenCidsPromises)];
+                    case 1:
+                        childrenCids = _a.sent();
+                        return [4 /*yield*/, privileges_1.default.categories.filterCids('find', _.flatten(childrenCids), uid)];
+                    case 2: 
+                    // Ignorar errores de seguridad para la llamada a filterCids
+                    /* eslint-disable-next-line @typescript-eslint/no-unsafe-call,
+                    @typescript-eslint/no-unsafe-member-access,
+                    @typescript-eslint/no-unsafe-return */
+                    return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    }
     Categories.search = function (data) {
         return __awaiter(this, void 0, void 0, function () {
             var query, page, uid, paginate, startTime, cids, result, searchResult, resultsPerPage, start, stop_1, childrenCids, uniqCids, categoryData;
@@ -57,16 +108,17 @@ function default_1(Categories) {
                         return [4 /*yield*/, findCids(query, data.hardCap)];
                     case 1:
                         cids = _a.sent();
-                        return [4 /*yield*/, plugins.hooks.fire('filter:categories.search', {
+                        return [4 /*yield*/, plugins_1.default.hooks.fire('filter:categories.search', {
                                 data: data,
                                 cids: cids,
                                 uid: uid,
                             })];
                     case 2:
                         result = _a.sent();
-                        return [4 /*yield*/, privileges.categories.filterCids('find', result.cids, uid)];
+                        return [4 /*yield*/, privileges_1.default.categories.filterCids('find', result.cids, uid)];
                     case 3:
-                        cids = _a.sent();
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                        cids = (_a.sent());
                         searchResult = {
                             matchCount: cids.length,
                         };
@@ -109,40 +161,4 @@ function default_1(Categories) {
             });
         });
     };
-    function findCids(query, hardCap) {
-        return __awaiter(this, void 0, void 0, function () {
-            var data;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!query || String(query).length < 2) {
-                            return [2 /*return*/, []];
-                        }
-                        return [4 /*yield*/, db.getSortedSetScan({
-                                key: 'categories:name',
-                                match: "*".concat(query.toLowerCase(), "*"),
-                                limit: hardCap || 500,
-                            })];
-                    case 1:
-                        data = _a.sent();
-                        return [2 /*return*/, data.map(function (data) { return parseInt(data.split(':').pop(), 10); })];
-                }
-            });
-        });
-    }
-    function getChildrenCids(cids, uid) {
-        return __awaiter(this, void 0, void 0, function () {
-            var childrenCids;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, Promise.all(cids.map(function (cid) { return Categories.getChildrenCids(cid); }))];
-                    case 1:
-                        childrenCids = _a.sent();
-                        return [4 /*yield*/, privileges.categories.filterCids('find', _.flatten(childrenCids), uid)];
-                    case 2: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    }
 }
-;
