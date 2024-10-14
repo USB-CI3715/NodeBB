@@ -30,7 +30,7 @@ interface TopicsType {
   ) => Promise<Topic[]>;
 }
 
-export default function Suggested(Topics: TopicsType) {
+function Suggested(Topics: TopicsType) {
 	async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
 		const tids = cutoff === 0 ?
 			await db?.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) as Promise<string[]> :
@@ -108,3 +108,5 @@ export default function Suggested(Topics: TopicsType) {
 		return topicData;
 	};
 }
+
+export = Suggested

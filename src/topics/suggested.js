@@ -2,8 +2,6 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = Suggested;
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 const lodash_1 = __importDefault(require("lodash"));
@@ -67,3 +65,4 @@ function Suggested(Topics) {
         return topicData;
     };
 }
+module.exports = Suggested;
