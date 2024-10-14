@@ -55,12 +55,13 @@ module.exports = function (Messaging: Messaging) {
 		if (!content) {
 			throw new Error('[[error:invalid-chat-message]]');
 		}
-
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 		const maximumChatMessageLength = meta.config.maximumChatMessageLength || 1000;
 		content = String(content).trim();
 		let { length } = content;
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 		({ content, length } = await plugins.hooks.fire('filter:messaging.checkContent', { content, length }));
 		if (!content) {
 			throw new Error('[[error:invalid-chat-message]]');
@@ -85,7 +86,8 @@ module.exports = function (Messaging: Messaging) {
 				throw new Error('[[error:no-privileges]]');
 			}
 		}
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 		const mid: number = await db.incrObjectField('global', 'nextMid');
 		const timestamp = data.timestamp || Date.now();
 		let message: MessageData = {
@@ -106,7 +108,8 @@ module.exports = function (Messaging: Messaging) {
 			message.ip = data.ip;
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 		message = await plugins.hooks.fire('filter:messaging.save', message);
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 		await db.setObject(`message:${mid}`, message);
@@ -131,7 +134,8 @@ module.exports = function (Messaging: Messaging) {
 			);
 		} else {
 			let uids = await Messaging.getUidsInRoom(roomId, 0, -1);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+			// eslint-disable-next-line max-len
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 			uids = await user.blocks.filterUids(uid, uids);
 			tasks.push(
 				Messaging.addRoomToUsers(roomId, uids, timestamp),
@@ -165,7 +169,8 @@ module.exports = function (Messaging: Messaging) {
 		if (!uids.length) {
 			return;
 		}
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
 		const keys = _.uniq(uids).map(uid => `uid:${uid}:chat:rooms`);
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 		await db.sortedSetsAdd(keys, timestamp, roomId);
