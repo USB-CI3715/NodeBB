@@ -337,17 +337,22 @@ async function getSearchCids(data: ISearchData): Promise<number[]> {
         getWatchedCids(data),
         getChildrenCids(data),
     ]);
-    return _.uniq(watchedCids.concat(childrenCids).concat(data.categories).filter(Boolean));
+
+    const categoryIds = data.categories
+        .map(category => Number(category))
+        .filter(cid => !isNaN(cid));
+
+    return _.uniq(watchedCids.concat(childrenCids).concat(categoryIds).filter(Boolean));
 }
 
-async function getWatchedCids(data) {
+async function getWatchedCids(data: ISearchData): Promise<number[]> {
     if (!data.categories.includes('watched')) {
         return [];
     }
     return await user.getWatchedCategories(data.uid);
 }
 
-async function getChildrenCids(data) {
+async function getChildrenCids(data: ISearchData): Promise<number[]> {
     if (!data.searchChildren) {
         return [];
     }
@@ -355,7 +360,7 @@ async function getChildrenCids(data) {
     return await privileges.categories.filterCids('find', _.uniq(_.flatten(childrenCids)), data.uid);
 }
 
-async function getSearchUids(data) {
+async function getSearchUids(data: ISearchData): Promise<number[]> {
     if (!data.postedBy) {
         return [];
     }
