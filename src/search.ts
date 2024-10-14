@@ -121,7 +121,7 @@ async function searchInContent(data: ISearchData) {
     return Object.assign(returnData, metadata);
 }
 
-async function searchInBookmarks(data: ISearchData, searchCids: number[], searchUids: number[]): Promise<number[]> {
+async function searchInBookmarks(data: ISearchData, searchCids: (string | number)[], searchUids: number[]): Promise<number[]> {
     const { uid, query, matchWords } = data;
     const allPids: number[] = [];
     await batch.processSortedSet(`uid:${uid}:bookmarks`, async (pids: number[]) => {
@@ -324,7 +324,7 @@ function sortPosts(posts: IPost[], data: ISearchData): IPost[] {
     }
 }
 
-async function getSearchCids(data: ISearchData): Promise<number[]> {
+async function getSearchCids(data: ISearchData): Promise<(string | number)[]> {
     if (!Array.isArray(data.categories) || !data.categories.length) {
         return [];
     }
