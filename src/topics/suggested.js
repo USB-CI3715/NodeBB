@@ -51,12 +51,12 @@ function Suggested(Topics) {
         ]);
         let tids = lodash_1.default.uniq([...tagTids, ...searchTids]);
         let categoryTids = [];
-        if (stop !== -1 && (await tids).length < stop - start + 1) {
+        if (stop !== -1 && (tids).length < stop - start + 1) {
             categoryTids = await getCategoryTids(tid, cid, cutoff);
         }
-        tids = lodash_1.default.shuffle(lodash_1.default.uniq([...await tids, ...categoryTids]));
+        tids = lodash_1.default.shuffle(lodash_1.default.uniq([...tids, ...categoryTids]));
         tids = await privileges_1.default.topics.filterTids('topics:read', tids, uid);
-        let topicData = await Topics.getTopicsByTids(await tids, uid);
+        let topicData = await Topics.getTopicsByTids(tids, uid);
         topicData = topicData.filter(topic => topic && topic.tid !== tid);
         topicData = await user_1.default.blocks.filter(uid, topicData);
         topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)

@@ -58,10 +58,10 @@ function Suggested(Topics: TopicsType) {
 			const now = Date.now();
 			return _.shuffle(
 				topicData.filter(t => t && t.timestamp > now - cutoff).map(t => t.tid)
-			).slice(0, 10) as Promise<string[]>;
+			).slice(0, 10) as string[];
 		}
 
-		return _.shuffle(filteredTids).slice(0, 10) as Promise<string[]>;
+		return _.shuffle(filteredTids).slice(0, 10) as string[];
 	}
 
 	async function getCategoryTids(tid: string, cid: string, cutoff: number): Promise<string[]> {
@@ -69,7 +69,7 @@ function Suggested(Topics: TopicsType) {
 			await db?.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) as Promise<string[]> :
 			await db?.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff) as Promise<string[]>;
 
-		return _.shuffle((await tids).filter((_tid: string) => _tid !== tid)) as Promise<string[]>;
+		return _.shuffle((await tids).filter((_tid: string) => _tid !== tid)) as string[];
 	}
 
 	Topics.getSuggestedTopics = async function (
@@ -90,16 +90,16 @@ function Suggested(Topics: TopicsType) {
 			getSearchTids(tid, title, cid, cutoff, uid),
 		]);
 
-		let tids = _.uniq([...tagTids, ...searchTids]) as Promise<string[]>;
+		let tids = _.uniq([...tagTids, ...searchTids]) as string[];
 
 		let categoryTids: string[] = [];
-		if (stop !== -1 && (await tids).length < stop - start + 1) {
+		if (stop !== -1 && (tids).length < stop - start + 1) {
 			categoryTids = await getCategoryTids(tid, cid, cutoff);
 		}
-		tids = _.shuffle(_.uniq([...await tids, ...categoryTids])) as Promise<string[]>;
-		tids = await privileges.topics.filterTids('topics:read', tids, uid) as Promise<string[]>;
+		tids = _.shuffle(_.uniq([...tids, ...categoryTids])) as string[];
+		tids = await privileges.topics.filterTids('topics:read', tids, uid) as string[];
 
-		let topicData = await Topics.getTopicsByTids(await tids, uid);
+		let topicData = await Topics.getTopicsByTids(tids, uid);
 		topicData = topicData.filter(topic => topic && topic.tid !== tid);
 		topicData = await user.blocks.filter(uid, topicData) as Topic[];
 		topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
