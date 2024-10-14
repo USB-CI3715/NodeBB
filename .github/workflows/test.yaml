@@ -30,8 +30,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          # Maps port 6380 on service container to the host
-          - 6380:6380
+          # Maps port 6379 on service container to the host
+          - 6379:6379
 
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
 
               "database": "redis",
               "redis:host": "127.0.0.1",
-              "redis:port": 6380,
+              "redis:port": 6379,
               "redis:password": "",
               "redis:database": 0
             }
@@ -69,7 +69,7 @@ jobs:
             {
               "host": "127.0.0.1",
               "database": 1,
-              "port": 6380
+              "port": 6379
             }
         run: |
           node app --setup="${SETUP}" --ci="${CI}"
