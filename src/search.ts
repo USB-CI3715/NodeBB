@@ -196,7 +196,7 @@ async function getTopics(tids: number[], data: ISearchData): Promise<ITopic[]> {
 			topic.category = cidToCategory[topic.cid];
 		}
 		if (topic?.tags) {
-			topic.tags = topic.tags.map((tag: ITag) => tag.value);
+			topic.tags = topic.tags.map((tag: ITag) => tag?.value);
 		}
 	});
 
