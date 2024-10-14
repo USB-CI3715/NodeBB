@@ -34,10 +34,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable import/no-import-module-exports */
 const _ = __importStar(require("lodash"));
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const plugins = __importStar(require("../meta"));
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const meta = __importStar(require("../plugins"));
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const db = __importStar(require("../database"));
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const user = __importStar(require("../user"));
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const utils = __importStar(require("../utils"));
 module.exports = function (Messaging) {
     Messaging.sendMessage = (data) => __awaiter(this, void 0, void 0, function* () {

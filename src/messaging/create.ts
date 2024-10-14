@@ -1,10 +1,14 @@
 /* eslint-disable import/no-import-module-exports */
 import * as _ from 'lodash';
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 import * as plugins from '../meta';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 import * as meta from '../plugins';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 import * as db from '../database';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 import * as user from '../user';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 import * as utils from '../utils';
 
 interface Messaging {
