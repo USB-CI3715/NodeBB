@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { createClient, RedisClientType } from 'redis';
+import Redis from 'ioredis';
 import type { RedisCommandArgument as RedisCommandArg } from '@redis/client/dist/lib/commands';
 import { execBatch } from './helpers';
 
 interface RedisModule {
-    client: RedisClientType;
+    client: Redis;
     listPrepend?: (key: string, value: RedisCommandArg) => Promise<void>;
     listAppend?: (key: string, value: RedisCommandArg) => Promise<void>;
     listRemoveLast?: (key: string) => Promise<RedisCommandArg | null>;
@@ -16,12 +16,14 @@ interface RedisModule {
     listLength?: (key: string) => Promise<number>;
 }
 
-const client: RedisClientType = createClient();
+const client = new Redis();
 
 client.on('error', err => console.log('Redis Client Error', err));
 
 (async () => {
 	await client.connect();
+	console.log('Redis client connected');
+	console.log(client);
 })().catch(err => console.error('Error initializing Redis client:', err));
 
 module.exports = function (module: RedisModule) {
@@ -31,21 +33,21 @@ module.exports = function (module: RedisModule) {
 		if (!key) {
 			return;
 		}
-		await module.client.lPush(key, value);
+		await module.client.lpush(key, value);
 	};
 
 	module.listAppend = async function (key: string, value: RedisCommandArg): Promise<void> {
 		if (!key) {
 			return;
 		}
-		await module.client.rPush(key, value);
+		await module.client.rpush(key, value);
 	};
 
 	module.listRemoveLast = async function (key: string): Promise<RedisCommandArg | null> {
 		if (!key) {
 			return null;
 		}
-		return await module.client.rPop(key);
+		return await module.client.rpop(key);
 	};
 
 	module.listRemoveAll = async function (key: string, value: RedisCommandArg | RedisCommandArg[]): Promise<void> {
@@ -53,11 +55,11 @@ module.exports = function (module: RedisModule) {
 			return;
 		}
 		if (Array.isArray(value)) {
-			const batch = module.client.multi();
-			value.forEach(val => batch.lRem(key, 0, val));
+			const batch = module.client.pipeline();
+			value.forEach(val => batch.lrem(key, 0, val));
 			await execBatch(batch);
 		} else {
-			await module.client.lRem(key, 0, value);
+			await module.client.lrem(key, 0, value);
 		}
 	};
 
@@ -65,17 +67,17 @@ module.exports = function (module: RedisModule) {
 		if (!key) {
 			return;
 		}
-		await module.client.lTrim(key, start, stop);
+		await module.client.ltrim(key, start, stop);
 	};
 
 	module.getListRange = async function (key: string, start: number, stop: number): Promise<RedisCommandArg[]> {
 		if (!key) {
 			return [];
 		}
-		return await module.client.lRange(key, start, stop);
+		return await module.client.lrange(key, start, stop);
 	};
 
 	module.listLength = async function (key: string): Promise<number> {
-		return await module.client.lLen(key);
+		return await module.client.llen(key);
 	};
 };
