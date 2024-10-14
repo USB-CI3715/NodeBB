@@ -6,7 +6,7 @@ export interface IPost {
     deleted: boolean,
     upvotes: number,
     downvotes: number,
-    category: any,
+    category: Record<string, unknown>,
     topic: ITopic,
     user: {
         username?: string,
@@ -16,7 +16,7 @@ export interface IPost {
 export interface ITopic {
     postcount?: string,
     deleted?: boolean,
-    category?: any,
+    category?: Record<string, unknown>,
     tags?: ITag[] | string[],
     cid?: number
 }
