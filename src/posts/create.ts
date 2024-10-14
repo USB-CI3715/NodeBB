@@ -8,32 +8,41 @@ import categories = require('../categories');
 import groups = require('../groups');
 import privileges = require('../privileges');
 
-
+/**
+ * Data required to create a post.
+ */
 interface PostData {
-    uid: number;
-    tid: number;
-    content: string;
-    timestamp?: number;
-    isMain?: boolean;
-    toPid?: number;
-    ip?: string;
-    handle?: string;
+    uid: number; // User ID of the post author
+    tid: number; // Topic ID where the post will be created
+    content: string; // Content of the post
+    timestamp?: number; // Timestamp of when the post was created (optional)
+    isMain?: boolean; // Indicates if the post is the main post in the topic (optional)
+    toPid?: number; // Parent post ID if this post is a reply (optional)
+    ip?: string; // IP address of the post author (optional)
+    handle?: string; // Handle or username of the post author (optional)
 }
 
+/**
+ * Represents a post.
+ */
 interface Post {
-    pid: number;
-    uid: number;
-    tid: number;
-    content: string;
-    timestamp: number;
-    toPid?: number;
-    ip?: string;
-    handle?: string;
-    cid?: number;
-    isMain?: boolean;
-    deleted?: boolean;
+    pid: number; // Post ID
+    uid: number; // User ID of the post author
+    tid: number; // Topic ID where the post is located
+    content: string; // Content of the post
+    timestamp: number; // Timestamp of when the post was created
+    toPid?: number; // Parent post ID if this post is a reply (optional)
+    ip?: string; // IP address of the post author (optional)
+    handle?: string; // Handle or username of the post author (optional)
+    cid?: number; // Category ID where the post is located (optional)
+    isMain?: boolean; // Indicates if the post is the main post in the topic (optional)
+    deleted?: boolean; // Indicates if the post is deleted (optional)
+    getPostFields?(pid: number, fields: string[]): Promise<Post>; // Retrieves specific fields of a post (optional)
+    create?(data: PostData): Promise<Post>; // Creates a new post (optional)
+    uploads?: {
+        sync(pid: number): void; // Synchronizes uploads for a specific post (optional)
+    };
 }
-
 function createPosts(Posts: Post) {
 	async function checkToPid(toPid: number, uid: number): Promise<void> {
 		const [toPost, canViewToPid] = await Promise.all([
