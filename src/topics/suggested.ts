@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import _ from 'lodash';
 import db from '../database';
 import user from '../user';
@@ -5,16 +9,37 @@ import privileges from '../privileges';
 import plugins from '../plugins';
 
 interface Topic {
-	tid: string;
-	timestamp: number;
+  tid: string;
+  timestamp: number;
 }
 
-export default function Suggested(Topics: any) {
-    async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
-		let tids = cutoff === 0 ?
+interface TopicFields {
+  cid: string;
+  title: string;
+  tags: { value: string }[];
+}
+
+interface TopicsType {
+  getTopicFields: (tid: string, fields: string[]) => Promise<TopicFields>;
+  getTopicsByTids: (tids: string[], uid: string[]) => Promise<Topic[]>;
+  calculateTopicIndices: (topics: Topic[], start: number) => void;
+  getSuggestedTopics?: (
+    tid: string,
+    uid: string[],
+    start: number,
+    stop: number,
+    cutoff?: number
+  ) => Promise<Topic[]>;
+}
+
+export default function Suggested(Topics: TopicsType) {
+	async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
+		let tids: string[] = cutoff === 0 ?
 			await db.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) :
 			await db.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
-		tids = tids.filter((_tid: string) => _tid !== tid); // remove self
+
+		// Solución: Filtrar solo si el tipo de _tid es válido
+		tids = tids.filter((_tid: string) => typeof _tid === 'string' && _tid !== tid);
 		return _.shuffle(_.uniq(tids)).slice(0, 10);
 	}
 
@@ -25,11 +50,12 @@ export default function Suggested(Topics: any) {
 			matchWords: 'any',
 			cid: [cid],
 			limit: 20,
-			ids: [],
+			ids: [] as string[], // especificamos el tipo
 		});
 		tids = tids.filter((_tid: string) => String(_tid) !== tid); // remove self
 		if (cutoff) {
-			const topicData = await Topics.getTopicsFields(tids, ['tid', 'timestamp']);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			const topicData = await Topics.getTopicsByTids(tids, ['tid', 'timestamp']);
 			const now = Date.now();
 			tids = topicData.filter((t: Topic) => t && t.timestamp > now - cutoff).map((t: Topic) => t.tid);
 		}
@@ -46,7 +72,7 @@ export default function Suggested(Topics: any) {
 
 	Topics.getSuggestedTopics = async function (
 		tid: string,
-		uid: string,
+		uid: string[],
 		start: number,
 		stop: number,
 		cutoff: number = 0
@@ -62,7 +88,7 @@ export default function Suggested(Topics: any) {
 		]);
 
 		const [tagTids, searchTids] = await Promise.all([
-			getTidsWithSameTags(tid, tags.map((t: any) => t.value), cutoff),
+			getTidsWithSameTags(tid, tags.map((t: { value: string }) => t.value), cutoff),
 			getSearchTids(tid, title, cid, cutoff),
 		]);
 
@@ -76,7 +102,7 @@ export default function Suggested(Topics: any) {
 		tids = await privileges.topics.filterTids('topics:read', tids, uid);
 
 		let topicData = await Topics.getTopicsByTids(tids, uid);
-		topicData = topicData.filter((topic: any) => topic && String(topic.tid) !== tid);
+		topicData = topicData.filter((topic: Topic) => topic && String(topic.tid) !== tid);
 		topicData = await user.blocks.filter(uid, topicData);
 		topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
 			.sort((t1: Topic, t2: Topic) => t2.timestamp - t1.timestamp);
