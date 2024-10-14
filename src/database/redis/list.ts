@@ -1,27 +1,38 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import Redis from 'ioredis';
-import type { RedisCommandArgument as RedisCommandArg } from '@redis/client/dist/lib/commands';
 import { execBatch } from './helpers';
+
+interface batch {
+	lrem(key: string, count: number, value: string): batch;
+}
+
+interface Redis {
+	lpush(key: string, value: string[] | string): Promise<number>;
+	rpush(key: string, value: string[] | string): Promise<number>;
+	rpop(key: string): Promise<string | null>;
+	lrem(key: string, count: number, value: string): Promise<number>;
+	ltrim(key: string, start: number, stop: number): Promise<string>;
+	lrange(key: string, start: number, stop: number): Promise<string[]>;
+	llen(key: string): Promise<number>;
+	pipeline(): batch;
+	exec(): Promise<void>;
+}
 
 interface RedisModule {
     client: Redis;
-    listPrepend?: (key: string, value: RedisCommandArg) => Promise<void>;
-    listAppend?: (key: string, value: RedisCommandArg) => Promise<void>;
-    listRemoveLast?: (key: string) => Promise<RedisCommandArg | null>;
-    listRemoveAll?: (key: string, value: RedisCommandArg | RedisCommandArg[]) => Promise<void>;
-    listTrim?: (key: string, start: number, stop: number) => Promise<void>;
-    getListRange?: (key: string, start: number, stop: number) => Promise<RedisCommandArg[]>;
-    listLength?: (key: string) => Promise<number>;
+    listPrepend(key: string, value: string[] | string): Promise<void>;
+    listAppend(key: string, value: string[] | string): Promise<void>;
+    listRemoveLast(key: string): Promise<string | null>;
+    listRemoveAll(key: string, value: string[] | string): Promise<void>;
+    listTrim(key: string, start: number, stop: number): Promise<void>;
+    getListRange(key: string, start: number, stop: number): Promise<string[] | null>;
+    listLength(key: string): Promise<number>;
 }
 
-const client = new Redis();
 
 module.exports = function (module: RedisModule) {
-	module.client = client;
-
-	module.listPrepend = async function (key: string, value: RedisCommandArg): Promise<void> {
+	module.listPrepend = async function (key: string, value: string[] | string): Promise<void> {
 		if (!key) {
 			return;
 		}
@@ -32,7 +43,7 @@ module.exports = function (module: RedisModule) {
 		}
 	};
 
-	module.listAppend = async function (key: string, value: RedisCommandArg): Promise<void> {
+	module.listAppend = async function (key: string, value: string[] | string): Promise<void> {
 		if (!key) {
 			return;
 		}
@@ -43,7 +54,7 @@ module.exports = function (module: RedisModule) {
 		}
 	};
 
-	module.listRemoveLast = async function (key: string): Promise<RedisCommandArg | null> {
+	module.listRemoveLast = async function (key: string): Promise<string | null> {
 		if (!key) {
 			return null;
 		}
@@ -55,7 +66,7 @@ module.exports = function (module: RedisModule) {
 		}
 	};
 
-	module.listRemoveAll = async function (key: string, value: RedisCommandArg | RedisCommandArg[]): Promise<void> {
+	module.listRemoveAll = async function (key: string, value: string[] | string): Promise<void> {
 		if (!key) {
 			return;
 		}
@@ -83,7 +94,7 @@ module.exports = function (module: RedisModule) {
 		}
 	};
 
-	module.getListRange = async function (key: string, start: number, stop: number): Promise<RedisCommandArg[]> {
+	module.getListRange = async function (key: string, start: number, stop: number): Promise<string[] | null> {
 		if (!key) {
 			return [];
 		}
