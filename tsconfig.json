@@ -4,10 +4,7 @@
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
-    "declaration": true
+    "esModuleInterop": true
   },
   "include": [
     "public/src/**/*",
