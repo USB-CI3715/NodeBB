@@ -1,4 +1,4 @@
-import _, { Dictionary } from 'lodash';
+import { Dictionary, flatten, uniq, zipObject } from 'lodash';
 import batch from './batch';
 import categories from './categories';
 import db from './database';
@@ -11,11 +11,11 @@ import topics from './topics';
 import user from './user';
 import utils from './utils';
 
-export const search = {
+export default {
     search: async function (data: ISearchData) {
         const start = process.hrtime();
         data.sortBy = data.sortBy || 'relevance';
-        let result: any;
+        let result: { time: string, [key: string]: unknown };
 
         if (['posts', 'titles', 'titlesposts', 'bookmarks'].includes(data.searchIn)) {
             result = await searchInContent(data);
@@ -33,10 +33,10 @@ export const search = {
             throw new Error('[[error:unknown-search-filter]]');
         }
 
-        result.time = (process.elapsedTimeSince(start) / 1000).toFixed(2);
+        result.time = (utils.elapsedTimeSince(start) / 1000).toFixed(2);
         return result;
-    }
-}
+    },
+};
 
 async function searchInContent(data: ISearchData) {
     data.uid = data.uid || 0;
@@ -94,10 +94,10 @@ async function searchInContent(data: ISearchData) {
 
     if (data.returnIds) {
         const mainPidsSet = new Set(mainPids);
-        const mainPidToTid = _.zipObject(mainPids, tids);
+        const mainPidToTid = zipObject(mainPids, tids);
         const pidsSet = new Set(pids);
-        const returnPids = allPids.filter(pid => pidsSet.has(pid));
-        const returnTids = allPids.filter(pid => mainPidsSet.has(pid)).map(pid => mainPidToTid[pid]);
+        const returnPids = allPids.filter((pid: number) => pidsSet.has(pid));
+        const returnTids = allPids.filter((pid: number) => mainPidsSet.has(pid)).map(pid => mainPidToTid[pid]);
         return { pids: returnPids, tids: returnTids };
     }
 
@@ -121,7 +121,8 @@ async function searchInContent(data: ISearchData) {
     return Object.assign(returnData, metadata);
 }
 
-async function searchInBookmarks(data: ISearchData, searchCids: (string | number)[], searchUids: number[]): Promise<number[]> {
+async function searchInBookmarks(data: ISearchData,
+    searchCids: (string | number)[], searchUids: number[]): Promise<number[]> {
     const { uid, query, matchWords } = data;
     const allPids: number[] = [];
     await batch.processSortedSet(`uid:${uid}:bookmarks`, async (pids: number[]) => {
@@ -136,9 +137,9 @@ async function searchInBookmarks(data: ISearchData, searchCids: (string | number
         if (query) {
             const tokens = query.toString().split(' ');
             const postData = await db.getObjectsFields(pids.map(pid => `post:${pid}`), ['content', 'tid']);
-            const tids: number[] = _.uniq(postData.map((p: { tid: number; }) => p.tid));
+            const tids: number[] = uniq(postData.map((p: { tid: number; }) => p.tid));
             const topicData = await db.getObjectsFields(tids.map(tid => `topic:${tid}`), ['title']);
-            const tidToTopic: Dictionary<{ title: string }> = _.zipObject(tids, topicData);
+            const tidToTopic: Dictionary<{ title: string }> = zipObject(tids, topicData);
             pids = pids.filter((_, i) => {
                 const content = postData[i].content.toString();
                 const title = tidToTopic[postData[i].tid].title.toString();
@@ -178,7 +179,7 @@ async function filterAndSort(pids: number[], data: ISearchData): Promise<number[
     sortPosts(postsData, data);
 
     const result = await plugins.hooks.fire('filter:search.filterAndSort', { pids: pids, posts: postsData, data: data });
-    return result.posts.map(post => post && post.pid);
+    return result.posts.map((post: IPost) => post && post.pid);
 }
 
 async function getMatchedPosts(pids: number[], data: ISearchData): Promise<IPost[]> {
@@ -186,16 +187,16 @@ async function getMatchedPosts(pids: number[], data: ISearchData): Promise<IPost
 
     let postsData = await posts.getPostsFields(pids, postFields);
     postsData = postsData.filter((post: IPost) => post && !post.deleted);
-    const uids: number[] = _.uniq(postsData.map((post: IPost) => post.uid));
-    const tids: number[] = _.uniq(postsData.map((post: IPost) => post.tid));
+    const uids: number[] = uniq(postsData.map((post: IPost) => post.uid));
+    const tids: number[] = uniq(postsData.map((post: IPost) => post.tid));
 
     const [users, topics] = await Promise.all([
         getUsers(uids, data),
         getTopics(tids, data),
     ]);
 
-    const tidToTopic = _.zipObject(tids, topics);
-    const uidToUser = _.zipObject(uids, users);
+    const tidToTopic = zipObject(tids, topics);
+    const uidToUser = zipObject(uids, users);
 
     postsData.forEach((post: IPost) => {
         if (topics && tidToTopic[post.tid]) {
@@ -222,10 +223,10 @@ async function getUsers(uids: number[], data: ISearchData): Promise<any> {
 
 async function getTopics(tids: number[], data: ISearchData): Promise<ITopic[]> {
     const topicsData = await topics.getTopicsData(tids);
-    const cids: number[] = _.uniq(topicsData.map((topic: ITopic) => topic && topic.cid));
+    const cids: number[] = uniq(topicsData.map((topic: ITopic) => topic && topic.cid));
     const categories = await getCategories(cids, data);
 
-    const cidToCategory = _.zipObject(cids, categories);
+    const cidToCategory = zipObject(cids, categories);
     topicsData.forEach((topic: ITopic) => {
         if (topic && categories && cidToCategory[topic.cid]) {
             topic.category = cidToCategory[topic.cid];
@@ -254,9 +255,9 @@ async function getCategories(cids: number[], data: ISearchData): Promise<Record<
 function filterByPostcount(posts: IPost[], postCount: string, repliesFilter: string): IPost[] {
     const parsedPostCount = parseInt(postCount, 10);
     if (postCount) {
-        const filterCondition = repliesFilter === 'atleast'
-            ? (post: IPost) => Number(post?.topic.postcount) >= parsedPostCount
-            : (post: IPost) => Number(post?.topic.postcount) <= parsedPostCount;
+        const filterCondition = repliesFilter === 'atleast' ?
+            (post: IPost) => Number(post?.topic.postcount) >= parsedPostCount :
+            (post: IPost) => Number(post?.topic.postcount) <= parsedPostCount;
 
         posts = posts.filter(filterCondition);
     }
@@ -340,7 +341,7 @@ async function getSearchCids(data: ISearchData): Promise<(string | number)[]> {
 
     const concatenatedData = [...watchedCids, ...childrenCids, ...data.categories];
 
-    return _.uniq(concatenatedData.filter(Boolean));
+    return uniq(concatenatedData.filter(Boolean));
 }
 
 async function getWatchedCids(data: ISearchData): Promise<number[]> {
@@ -355,7 +356,7 @@ async function getChildrenCids(data: ISearchData): Promise<number[]> {
         return [];
     }
     const childrenCids = await Promise.all(data.categories.map(cid => categories.getChildrenCids(cid)));
-    return await privileges.categories.filterCids('find', _.uniq(_.flatten(childrenCids)), data.uid);
+    return await privileges.categories.filterCids('find', uniq(flatten(childrenCids)), data.uid);
 }
 
 async function getSearchUids(data: ISearchData): Promise<number[]> {

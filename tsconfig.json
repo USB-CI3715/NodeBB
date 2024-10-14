@@ -1,6 +1,9 @@
 {
     "compilerOptions": {
       "moduleResolution": "node",
-      "esModuleInterop": true
+      "esModuleInterop": true,
+      "declaration": true,
+      "emitDeclarationOnly": true,
+      "allowImportingTsExtensions": true
     }
 }  
