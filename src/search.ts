@@ -372,5 +372,5 @@ const search: ISearch = {
 };
 
 promisify(search);
-module.exports = search;
+export default search;
 
