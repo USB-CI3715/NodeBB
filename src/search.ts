@@ -297,12 +297,14 @@ function sortPosts(posts: IPost[], data: ISearchData): IPost[] {
     data.sortDirection = data.sortDirection || 'desc';
     const direction = data.sortDirection === 'desc' ? 1 : -1;
     const fields = data.sortBy.split('.');
+
     if (fields.length === 1) {
         return posts.sort((post_1, post_2) => direction * (post_2[fields[0]] - post_1[fields[0]]));
     }
 
     const firstPost = posts[0];
-    if (!fields || fields.length !== 2 || !firstPost[fields[0]] || !firstPost[fields[0]][fields[1]]) {
+    const isValid = fields && fields.length === 2 && firstPost?.[fields[0]]?.[fields[1]];
+    if (!isValid) {
         return;
     }
 
@@ -322,7 +324,7 @@ function sortPosts(posts: IPost[], data: ISearchData): IPost[] {
     }
 }
 
-async function getSearchCids(data) {
+async function getSearchCids(data: ISearchData): Promise<number[]> {
     if (!Array.isArray(data.categories) || !data.categories.length) {
         return [];
     }
