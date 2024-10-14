@@ -7,13 +7,16 @@ import batch from './batch';
 import categories from './categories';
 import db from './database';
 import { IPost, ITag, ITopic } from './interfaces/post';
-import { ISearchData } from './interfaces/search';
+import { ISearch, ISearchData } from './interfaces/search';
 import plugins from './plugins';
 import posts from './posts';
 import privileges from './privileges';
 import topics from './topics';
 import user from './user';
 import utils from './utils';
+import { promisify } from './promisify';
+
+const search: ISearch = {} as ISearch;
 
 async function getWatchedCids(data: ISearchData): Promise<number[]> {
 	if (!data.categories.includes('watched')) {
@@ -343,29 +346,30 @@ async function searchInContent(data: ISearchData) {
 	return Object.assign(returnData, metadata);
 }
 
-export default {
-	search: async function (data: ISearchData) {
-		const start = process.hrtime();
-		data.sortBy = data.sortBy || 'relevance';
-		let result: { time: string, [key: string]: unknown };
+search.search = async function (data: ISearchData) {
+	const start = process.hrtime();
+	data.sortBy = data.sortBy || 'relevance';
+	let result: { time: string, [key: string]: unknown };
 
-		if (['posts', 'titles', 'titlesposts', 'bookmarks'].includes(data.searchIn)) {
-			result = await searchInContent(data);
-		} else if (data.searchIn === 'users') {
-			result = await user.search(data);
-		} else if (data.searchIn === 'categories') {
-			result = await categories.search(data);
-		} else if (data.searchIn === 'tags') {
-			result = await topics.searchAndLoadTags(data);
-		} else if (data.searchIn) {
-			result = await plugins.hooks.fire('filter:search.searchIn', {
-				data,
-			});
-		} else {
-			throw new Error('[[error:unknown-search-filter]]');
-		}
+	if (['posts', 'titles', 'titlesposts', 'bookmarks'].includes(data.searchIn)) {
+		result = await searchInContent(data);
+	} else if (data.searchIn === 'users') {
+		result = await user.search(data);
+	} else if (data.searchIn === 'categories') {
+		result = await categories.search(data);
+	} else if (data.searchIn === 'tags') {
+		result = await topics.searchAndLoadTags(data);
+	} else if (data.searchIn) {
+		result = await plugins.hooks.fire('filter:search.searchIn', {
+			data,
+		});
+	} else {
+		throw new Error('[[error:unknown-search-filter]]');
+	}
 
-		result.time = (utils.elapsedTimeSince(start) / 1000).toFixed(2);
-		return result;
-	},
-};
+	result.time = (utils.elapsedTimeSince(start) / 1000).toFixed(2);
+	return result;
+}
+
+promisify(search);
+export default search;

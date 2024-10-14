@@ -18,3 +18,7 @@ export interface ISearchData {
     postedBy?: string
 }
 
+export interface ISearch {
+	search(data: ISearchData): Promise<{ time: string, [key: string]: unknown }>;
+}
+
