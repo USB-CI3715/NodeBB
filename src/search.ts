@@ -338,11 +338,9 @@ async function getSearchCids(data: ISearchData): Promise<number[]> {
         getChildrenCids(data),
     ]);
 
-    const categoryIds = data.categories
-        .map(category => Number(category))
-        .filter(cid => !isNaN(cid));
+    const concatenatedData = [...watchedCids, ...childrenCids, ...data.categories];
 
-    return _.uniq(watchedCids.concat(childrenCids).concat(categoryIds).filter(Boolean));
+    return _.uniq(concatenatedData.filter(Boolean));
 }
 
 async function getWatchedCids(data: ISearchData): Promise<number[]> {

@@ -3,7 +3,7 @@ export interface ISearchData {
     searchIn: string,
     uid?: number;
     hasTags?: string,
-    categories?: string[],
+    categories?: any[],
     searchChildren?: boolean,
     sortBy?: string,
     sortDirection?: string,
