@@ -36,7 +36,7 @@ function Suggested(Topics: TopicsType) {
 			await db?.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) as Promise<string[]> :
 			await db?.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff) as Promise<string[]>;
 
-		return _.shuffle(_.uniq((await tids).filter((_tid: string) => _tid !== tid))).slice(0, 10) as Promise<string[]>;
+		return _.shuffle(_.uniq((await tids).filter((_tid: string) => _tid !== tid))).slice(0, 10) as string[];
 	}
 
 	async function getSearchTids(
