@@ -5,6 +5,9 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
+    "declaration": true
   },
   "include": [
     "public/src/**/*",

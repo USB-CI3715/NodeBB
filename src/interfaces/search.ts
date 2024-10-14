@@ -13,7 +13,7 @@ export interface ISearchData {
     page?: number,
     replies?: string,
     timeRange?: string,
-    repliesFilter?: any,
-    timeFilter?: any,
+    repliesFilter?: string,
+    timeFilter?: string,
     postedBy?: string
 }
