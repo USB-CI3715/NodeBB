@@ -70,6 +70,7 @@ export default function (Messaging: IMessaging) {
   };
   // Obtiene las configuraciones de notificación de un grupo de usuarios en una sala
   Messaging.getUidsNotificationSetting = async (uids: string[], roomId: string): Promise<number[]> => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const [settings, roomData]: [Record<string, string>, RoomData] = await Promise.all([
       // Obtiene los ajustes personalizados de cada usuario  
       db.getObjectFields(`chat:room:${roomId}:notification:settings`, uids),
@@ -87,6 +88,7 @@ export default function (Messaging: IMessaging) {
     });
     if (chatNids.length) {
       // Marca las notificaciones como leídas
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       await notifications.markReadMultiple(chatNids, uid);
       // Actualiza el recuento de notificaciones para el usuario
       await user.notifications.pushCount(uid);
@@ -95,6 +97,7 @@ export default function (Messaging: IMessaging) {
   // Notifica a los usuarios de una sala sobre un nuevo mensaje
   Messaging.notifyUsersInRoom = async (fromUid: number, roomId: string, messageObj: MessageObj): Promise<void> => {
     // Comprueba si la sala es pública
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const isPublic = parseInt(await db.getObjectField(`chat:room:${roomId}`, 'public'), 10) === 1;
     let data = {
       roomId,
@@ -103,13 +106,16 @@ export default function (Messaging: IMessaging) {
       public: isPublic,
     };
     // Permite a los plugins modificar los datos de la notificación
-    data = await plugins.hooks.fire('filter:messaging.notify', data);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    data = await plugins.hooks.fire('filter:messaging.notify', data);;
     if (!data) {
       // Si los datos fueron anulados por un plugin, no continuar
       return;
     }
     // Envía el mensaje a todos los usuarios conectados a la sala
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     io.in(`chat_room_${roomId}`).emit('event:chats.receive', data);
+
     const unreadData = { roomId, fromUid, public: isPublic };
     if (isPublic && !messageObj.system) {
       // Notifica a los usuarios en la página de chats públicos sobre un nuevo mensaje no leído  
