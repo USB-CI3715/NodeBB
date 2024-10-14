@@ -33,17 +33,16 @@ interface TopicsType {
 export default function Suggested(Topics: TopicsType) {
 	async function getTidsWithSameTags(tid: string, tags: string[], cutoff: number): Promise<string[]> {
 		const tids = cutoff === 0 ?
-			await db.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) as string[] :
-			await db.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff) as string[];
+			await db?.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) as Promise<string[]> :
+			await db?.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff) as Promise<string[]>;
 
-		return _.shuffle(_.uniq(tids.filter(_tid => _tid !== tid))).slice(0, 10) as string[];
+		return _.shuffle(_.uniq((await tids).filter((_tid: string) => _tid !== tid))).slice(0, 10) as Promise<string[]>;
 	}
 
 	async function getSearchTids(
-		tid: string, title: string, cid: string, cutoff: number,
-		uid: string
+		tid: string, title: string, cid: string, cutoff: number, uid: string
 	): Promise<string[]> {
-		let { ids: tids } = await plugins.hooks.fire('filter:search.query', {
+		const { ids: tids } = await plugins.hooks.fire('filter:search.query', {
 			index: 'topic',
 			content: title,
 			matchWords: 'any',
@@ -52,22 +51,25 @@ export default function Suggested(Topics: TopicsType) {
 			ids: [],
 		}) as { ids: string[] };
 
-		tids = tids.filter(_tid => _tid !== tid);
+		const filteredTids = tids.filter(_tid => _tid !== tid);
+
 		if (cutoff) {
-			const topicData = await Topics.getTopicsByTids(tids, uid);
+			const topicData = await Topics.getTopicsByTids(filteredTids, uid);
 			const now = Date.now();
-			tids = topicData.filter(t => t && t.timestamp > now - cutoff).map(t => t.tid);
+			return _.shuffle(
+				topicData.filter(t => t && t.timestamp > now - cutoff).map(t => t.tid)
+			).slice(0, 10) as Promise<string[]>;
 		}
 
-		return _.shuffle(tids).slice(0, 10) as string[];
+		return _.shuffle(filteredTids).slice(0, 10) as Promise<string[]>;
 	}
 
 	async function getCategoryTids(tid: string, cid: string, cutoff: number): Promise<string[]> {
 		const tids = cutoff === 0 ?
-			await db.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) as string[] :
-			await db.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff) as string[];
+			await db?.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) as Promise<string[]> :
+			await db?.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff) as Promise<string[]>;
 
-		return _.shuffle(tids.filter(_tid => _tid !== tid)) as string[];
+		return _.shuffle((await tids).filter((_tid: string) => _tid !== tid)) as Promise<string[]>;
 	}
 
 	Topics.getSuggestedTopics = async function (
@@ -80,7 +82,7 @@ export default function Suggested(Topics: TopicsType) {
 		if (!tid) return [];
 
 		tid = String(tid);
-		cutoff = cutoff === 0 ? cutoff : (cutoff * 2592000000);
+		cutoff = cutoff === 0 ? cutoff : cutoff * 2592000000;
 		const { cid, title, tags } = await Topics.getTopicFields(tid, ['cid', 'title', 'tags']);
 
 		const [tagTids, searchTids] = await Promise.all([
@@ -88,16 +90,16 @@ export default function Suggested(Topics: TopicsType) {
 			getSearchTids(tid, title, cid, cutoff, uid),
 		]);
 
-		let tids = _.uniq([...tagTids, ...searchTids]) as string[];
+		let tids = _.uniq([...tagTids, ...searchTids]) as Promise<string[]>;
 
 		let categoryTids: string[] = [];
-		if (stop !== -1 && tids.length < stop - start + 1) {
+		if (stop !== -1 && (await tids).length < stop - start + 1) {
 			categoryTids = await getCategoryTids(tid, cid, cutoff);
 		}
-		tids = _.shuffle(_.uniq([...tids, ...categoryTids])) as string[];
-		tids = await privileges.topics.filterTids('topics:read', tids, uid) as string[];
+		tids = _.shuffle(_.uniq([...await tids, ...categoryTids])) as Promise<string[]>;
+		tids = await privileges.topics.filterTids('topics:read', tids, uid) as Promise<string[]>;
 
-		let topicData = await Topics.getTopicsByTids(tids, uid);
+		let topicData = await Topics.getTopicsByTids(await tids, uid);
 		topicData = topicData.filter(topic => topic && topic.tid !== tid);
 		topicData = await user.blocks.filter(uid, topicData) as Topic[];
 		topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
