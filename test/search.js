@@ -102,22 +102,16 @@ describe('Search', () => {
 		}
 	});
 
-	it('should search for a tag', (done) => {
-		search.search(
-			{
-				query: 'plug',
-				searchIn: 'tags',
-			},
-			(err, data) => {
-				assert.ifError(err);
-				assert(data);
-				assert.equal(data.matchCount, 1);
-				assert.equal(data.tags.length, 1);
-				assert.equal(data.tags[0].value, 'plugin');
-				assert.equal(data.tags[0].score, 2);
-				done();
-			}
-		);
+	it('should search for a tag', async () => {
+		const data = await search.search({
+			query: 'plug',
+			searchIn: 'tags',
+		});
+		assert(data);
+		assert.equal(data.matchCount, 1);
+		assert.equal(data.tags.length, 1);
+		assert.equal(data.tags[0].value, 'plugin');
+		assert.equal(data.tags[0].score, 2);
 	});
 
 	it('should search for a category', async () => {
@@ -151,61 +145,42 @@ describe('Search', () => {
 		assert.strictEqual(data.length, 5);
 	});
 
-	it('should fail if searchIn is wrong', (done) => {
-		search.search(
-			{
+	it('should fail if searchIn is wrong', async () => {
+		try {
+			await search.search({
 				query: 'plug',
 				searchIn: '',
-			},
-			(err) => {
-				assert.equal(err.message, '[[error:unknown-search-filter]]');
-				done();
-			}
-		);
+			});
+		} catch (err) {
+			assert.equal(err.message, '[[error:unknown-search-filter]]');
+		}
 	});
 
-	it('should search with tags filter', (done) => {
-		search.search(
-			{
-				query: 'mongodb',
-				searchIn: 'titles',
-				hasTags: ['nodebb', 'javascript'],
-			},
-			(err, data) => {
-				assert.ifError(err);
-				assert.equal(data.posts[0].tid, topic2Data.tid);
-				done();
-			}
-		);
+	it('should search with tags filter', async () => {
+		const data = await search.search({
+			query: 'mongodb',
+			searchIn: 'titles',
+			hasTags: ['nodebb', 'javascript'],
+		});
+		assert.equal(data.posts[0].tid, topic2Data.tid);
 	});
 
-	it('should not crash if tags is not an array', (done) => {
-		search.search(
-			{
-				query: 'mongodb',
-				searchIn: 'titles',
-				hasTags: 'nodebb,javascript',
-			},
-			(err, data) => {
-				assert.ifError(err);
-				done();
-			}
-		);
+	it('should not crash if tags is not an array', async () => {
+		const data = await search.search({
+			query: 'mongodb',
+			searchIn: 'titles',
+			hasTags: 'nodebb,javascript',
+		});
+		assert(data);
 	});
 
-	it('should not find anything', (done) => {
-		search.search(
-			{
-				query: 'xxxxxxxxxxxxxx',
-				searchIn: 'titles',
-			},
-			(err, data) => {
-				assert.ifError(err);
-				assert(Array.isArray(data.posts));
-				assert(!data.matchCount);
-				done();
-			}
-		);
+	it('should not find anything', async () => {
+		const data = await search.search({
+			query: 'xxxxxxxxxxxxxx',
+			searchIn: 'titles',
+		});
+		assert(Array.isArray(data.posts));
+		assert(!data.matchCount);
 	});
 
 	it('should search child categories', async () => {
