@@ -25,7 +25,7 @@ const privileges_1 = __importDefault(require("./privileges"));
 const topics_1 = __importDefault(require("./topics"));
 const user_1 = __importDefault(require("./user"));
 const utils_1 = __importDefault(require("./utils"));
-const promisify_1 = require("./promisify");
+const promisify_1 = __importDefault(require("./promisify"));
 const search = {};
 function getWatchedCids(data) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -356,5 +356,5 @@ search.search = function (data) {
         return result;
     });
 };
-(0, promisify_1.promisify)(search);
+(0, promisify_1.default)(search);
 exports.default = search;

@@ -14,7 +14,7 @@ import privileges from './privileges';
 import topics from './topics';
 import user from './user';
 import utils from './utils';
-import { promisify } from './promisify';
+import promisify from './promisify';
 
 const search: ISearch = {} as ISearch;
 
