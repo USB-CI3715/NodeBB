@@ -1,15 +1,15 @@
 /* eslint-disable import/no-import-module-exports */
-import * as _ from 'lodash';
+import _ from 'lodash';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as plugins from '../plugins';
+import plugins from '../plugins';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as meta from '../meta';
+import meta from '../meta';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as db from '../database';
+import db from '../database';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as user from '../user';
+import user from '../user';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as utils from '../utils';
+import utils from '../utils';
 
 interface Messaging {
     sendMessage(data: MessageData): Promise<MessageData>;
