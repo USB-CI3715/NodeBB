@@ -23,11 +23,10 @@ const plugins_1 = __importDefault(require("../plugins"));
 function Suggested(Topics) {
     function getTidsWithSameTags(tid, tags, cutoff) {
         return __awaiter(this, void 0, void 0, function* () {
-            let tids = cutoff === 0 ?
+            const tids = cutoff === 0 ?
                 yield database_1.default.getSortedSetRevRange(tags.map(tag => `tag:${tag}:topics`), 0, -1) :
                 yield database_1.default.getSortedSetRevRangeByScore(tags.map(tag => `tag:${tag}:topics`), 0, -1, '+inf', Date.now() - cutoff);
-            tids = tids.filter((_tid) => typeof _tid === 'string' && _tid !== tid);
-            return lodash_1.default.shuffle(lodash_1.default.uniq(tids)).slice(0, 10);
+            return lodash_1.default.shuffle(lodash_1.default.uniq(tids.filter(_tid => _tid !== tid))).slice(0, 10);
         });
     }
     function getSearchTids(tid, title, cid, cutoff) {
@@ -40,13 +39,13 @@ function Suggested(Topics) {
                 limit: 20,
                 ids: [],
             });
-            tids = tids.filter((_tid) => String(_tid) !== tid);
+            tids = tids.filter(_tid => _tid !== tid);
             if (cutoff) {
-                const topicData = yield Topics.getTopicsByTids(tids, ['tid', 'timestamp']);
+                const topicData = yield Topics.getTopicsByTids(tids, '');
                 const now = Date.now();
-                tids = topicData.filter((t) => t && t.timestamp > now - cutoff).map((t) => t.tid);
+                tids = topicData.filter(t => t && t.timestamp > now - cutoff).map(t => t.tid);
             }
-            return lodash_1.default.shuffle(tids).slice(0, 10).map(String);
+            return lodash_1.default.shuffle(tids).slice(0, 10);
         });
     }
     function getCategoryTids(tid, cid, cutoff) {
@@ -54,33 +53,29 @@ function Suggested(Topics) {
             const tids = cutoff === 0 ?
                 yield database_1.default.getSortedSetRevRange(`cid:${cid}:tids:lastposttime`, 0, 9) :
                 yield database_1.default.getSortedSetRevRangeByScore(`cid:${cid}:tids:lastposttime`, 0, 10, '+inf', Date.now() - cutoff);
-            return lodash_1.default.shuffle(tids.filter((_tid) => _tid !== tid));
+            return lodash_1.default.shuffle(tids.filter(_tid => _tid !== tid));
         });
     }
     Topics.getSuggestedTopics = function (tid_1, uid_1, start_1, stop_1) {
         return __awaiter(this, arguments, void 0, function* (tid, uid, start, stop, cutoff = 0) {
-            let tids = [];
-            if (!tid) {
+            if (!tid)
                 return [];
-            }
             tid = String(tid);
             cutoff = cutoff === 0 ? cutoff : (cutoff * 2592000000);
-            const { cid, title, tags } = yield Topics.getTopicFields(tid, [
-                'cid', 'title', 'tags',
-            ]);
+            const { cid, title, tags } = yield Topics.getTopicFields(tid, ['cid', 'title', 'tags']);
             const [tagTids, searchTids] = yield Promise.all([
-                getTidsWithSameTags(tid, tags.map((t) => t.value), cutoff),
+                getTidsWithSameTags(tid, tags.map(t => t.value), cutoff),
                 getSearchTids(tid, title, cid, cutoff),
             ]);
-            tids = lodash_1.default.uniq(tagTids.concat(searchTids));
+            let tids = lodash_1.default.uniq([...tagTids, ...searchTids]);
             let categoryTids = [];
             if (stop !== -1 && tids.length < stop - start + 1) {
                 categoryTids = yield getCategoryTids(tid, cid, cutoff);
             }
-            tids = lodash_1.default.shuffle(lodash_1.default.uniq(tids.concat(categoryTids)));
+            tids = lodash_1.default.shuffle(lodash_1.default.uniq([...tids, ...categoryTids]));
             tids = (yield privileges_1.default.topics.filterTids('topics:read', tids, uid));
             let topicData = yield Topics.getTopicsByTids(tids, uid);
-            topicData = topicData.filter((topic) => topic && String(topic.tid) !== tid);
+            topicData = topicData.filter(topic => topic && topic.tid !== tid);
             topicData = (yield user_1.default.blocks.filter(uid, topicData));
             topicData = topicData.slice(start, stop !== -1 ? stop + 1 : undefined)
                 .sort((t1, t2) => t2.timestamp - t1.timestamp);
