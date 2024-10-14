@@ -64,4 +64,90 @@ function createPosts(Posts: Post) {
 			db.incrObjectField(`post:${postData.toPid}`, 'replies'),
 		]);
 	}
+	// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	Posts.create = async function (data: PostData): Promise<Post> {
+		// This is an internal method, consider using Topics.reply instead
+		const { uid, tid, content, timestamp = Date.now(), isMain = false } = data;
+		if (!uid && parseInt(uid.toString(), 10) !== 0) {
+			throw new Error('[[error:invalid-uid]]');
+		}
+
+		if (data.toPid) {
+			await checkToPid(data.toPid, uid);
+		}
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		const pid: number = await db.incrObjectField('global', 'nextPid') as number;
+		let postData: Post = {
+			pid: pid,
+			uid: uid,
+			tid: tid,
+			content: content.toString(),
+			timestamp: timestamp,
+		};
+
+		if (data.toPid) {
+			postData.toPid = data.toPid;
+		}
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		if (data.ip && meta.config.trackIpPerPost) {
+			postData.ip = data.ip;
+		}
+		if (data.handle && !parseInt(uid.toString(), 10)) {
+			postData.handle = data.handle;
+		}
+
+		let result: { post: Post } = await plugins.hooks.fire('filter:post.create', { post: postData, data: data }) as { post: Post };
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		postData = result.post;
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		await db.setObject(`post:${postData.pid}`, postData);
+
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		const topicData = await topics.getTopicFields(tid, ['cid', 'pinned']) as { cid: number; pinned: boolean };
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		postData.cid = topicData.cid;
+
+		await Promise.all([
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+			db.sortedSetAdd('posts:pid', timestamp, postData.pid),
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+			db.incrObjectField('global', 'postCount'),
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line  @typescript-eslint/no-unsafe-call
+			user.onNewPostMade(postData),
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			topics.onNewPostMade(postData),
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+			categories.onNewPostMade(topicData.cid, topicData.pinned, postData),
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			groups.onNewPostMade(postData),
+			addReplyTo(postData, timestamp),
+			// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+			Posts.uploads.sync(postData.pid),
+		]);
+
+		result = await plugins.hooks.fire('filter:post.get', { post: postData, uid: data.uid }) as { post: Post };
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		result.post.isMain = isMain;
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		await plugins.hooks.fire('action:post.save', { post: _.clone(result.post) });
+		// La siguiente línea llama a una función en un módulo que aún no ha sido actualizado a TS
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		return result.post;
+	};
 }
