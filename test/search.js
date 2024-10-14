@@ -1,6 +1,5 @@
 'use strict';
 
-
 const assert = require('assert');
 const nconf = require('nconf');
 
@@ -28,21 +27,27 @@ describe('Search', () => {
 	before(async () => {
 		phoebeUid = await user.create({ username: 'phoebe' });
 		gingerUid = await user.create({ username: 'ginger' });
-		cid1 = (await categories.create({
-			name: 'Test Category',
-			description: 'Test category created by testing script',
-		})).cid;
+		cid1 = (
+			await categories.create({
+				name: 'Test Category',
+				description: 'Test category created by testing script',
+			})
+		).cid;
 
-		cid2 = (await categories.create({
-			name: 'Test Category',
-			description: 'Test category created by testing script',
-		})).cid;
+		cid2 = (
+			await categories.create({
+				name: 'Test Category',
+				description: 'Test category created by testing script',
+			})
+		).cid;
 
-		cid3 = (await categories.create({
-			name: 'Child Test Category',
-			description: 'Test category created by testing script',
-			parentCid: cid2,
-		})).cid;
+		cid3 = (
+			await categories.create({
+				name: 'Child Test Category',
+				description: 'Test category created by testing script',
+				parentCid: cid2,
+			})
+		).cid;
 
 		({ topicData: topic1Data, postData: post1Data } = await topics.post({
 			uid: phoebeUid,
@@ -81,34 +86,32 @@ describe('Search', () => {
 		await privileges.global.rescind(['groups:search:content'], 'guests');
 	});
 
-	it('should search for a user', (done) => {
-		search.search({
-			query: 'gin',
-			searchIn: 'users',
-		}, (err, data) => {
-			assert.ifError(err);
+	it('should search for a user', async () => {
+		try {
+			const data = await search.search({
+				query: 'gin',
+				searchIn: 'users',
+			});
 			assert(data);
 			assert.equal(data.matchCount, 1);
 			assert.equal(data.users.length, 1);
 			assert.equal(data.users[0].uid, gingerUid);
 			assert.equal(data.users[0].username, 'ginger');
-			done();
-		});
+		} catch (err) {
+			assert.ifError(err);
+		}
 	});
 
-	it('should search for a tag', (done) => {
-		search.search({
+	it('should search for a tag', async () => {
+		const data = await search.search({
 			query: 'plug',
 			searchIn: 'tags',
-		}, (err, data) => {
-			assert.ifError(err);
-			assert(data);
-			assert.equal(data.matchCount, 1);
-			assert.equal(data.tags.length, 1);
-			assert.equal(data.tags[0].value, 'plugin');
-			assert.equal(data.tags[0].score, 2);
-			done();
 		});
+		assert(data);
+		assert.equal(data.matchCount, 1);
+		assert.equal(data.tags.length, 1);
+		assert.equal(data.tags[0].value, 'plugin');
+		assert.equal(data.tags[0].score, 2);
 	});
 
 	it('should search for a category', async () => {
@@ -130,55 +133,54 @@ describe('Search', () => {
 
 	it('should search for categories', async () => {
 		const socketCategories = require('../src/socket.io/categories');
-		let data = await socketCategories.categorySearch({ uid: phoebeUid }, { query: 'baz', parentCid: 0 });
+		let data = await socketCategories.categorySearch(
+			{ uid: phoebeUid },
+			{ query: 'baz', parentCid: 0 }
+		);
 		assert.strictEqual(data[0].name, 'baz category');
-		data = await socketCategories.categorySearch({ uid: phoebeUid }, { query: '', parentCid: 0 });
+		data = await socketCategories.categorySearch(
+			{ uid: phoebeUid },
+			{ query: '', parentCid: 0 }
+		);
 		assert.strictEqual(data.length, 5);
 	});
 
-	it('should fail if searchIn is wrong', (done) => {
-		search.search({
-			query: 'plug',
-			searchIn: '',
-		}, (err) => {
+	it('should fail if searchIn is wrong', async () => {
+		try {
+			await search.search({
+				query: 'plug',
+				searchIn: '',
+			});
+		} catch (err) {
 			assert.equal(err.message, '[[error:unknown-search-filter]]');
-			done();
-		});
+		}
 	});
 
-	it('should search with tags filter', (done) => {
-		search.search({
+	it('should search with tags filter', async () => {
+		const data = await search.search({
 			query: 'mongodb',
 			searchIn: 'titles',
 			hasTags: ['nodebb', 'javascript'],
-		}, (err, data) => {
-			assert.ifError(err);
-			assert.equal(data.posts[0].tid, topic2Data.tid);
-			done();
 		});
+		assert.equal(data.posts[0].tid, topic2Data.tid);
 	});
 
-	it('should not crash if tags is not an array', (done) => {
-		search.search({
+	it('should not crash if tags is not an array', async () => {
+		const data = await search.search({
 			query: 'mongodb',
 			searchIn: 'titles',
 			hasTags: 'nodebb,javascript',
-		}, (err, data) => {
-			assert.ifError(err);
-			done();
 		});
+		assert(data);
 	});
 
-	it('should not find anything', (done) => {
-		search.search({
+	it('should not find anything', async () => {
+		const data = await search.search({
 			query: 'xxxxxxxxxxxxxx',
 			searchIn: 'titles',
-		}, (err, data) => {
-			assert.ifError(err);
-			assert(Array.isArray(data.posts));
-			assert(!data.matchCount);
-			done();
 		});
+		assert(Array.isArray(data.posts));
+		assert(!data.matchCount);
 	});
 
 	it('should search child categories', async () => {
