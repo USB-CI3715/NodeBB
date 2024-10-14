@@ -43,85 +43,121 @@ var plugins = require("../plugins");
 var promisify_1 = require("../promisify");
 function isConditionActive(condition) {
     return __awaiter(this, void 0, void 0, function () {
-        var isMember;
+        var isMember, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db.isSetMember('conditions:active', condition)];
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, db.isSetMember('conditions:active', condition)];
                 case 1:
                     isMember = _a.sent();
                     return [2 /*return*/, isMember];
+                case 2:
+                    err_1 = _a.sent();
+                    console.error('Error in isConditionActive: ', err_1);
+                    return [2 /*return*/, false];
+                case 3: return [2 /*return*/];
             }
         });
     });
 }
 function getIDsByCondition(condition) {
     return __awaiter(this, void 0, void 0, function () {
-        var members;
+        var members, err_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db.getSetMembers("condition:".concat(condition, ":rewards"))];
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, db.getSetMembers("condition:".concat(condition, ":rewards"))];
                 case 1:
                     members = _a.sent();
                     return [2 /*return*/, members];
+                case 2:
+                    err_2 = _a.sent();
+                    console.error('Error in getIDsByCondition: ', err_2);
+                    return [2 /*return*/, []];
+                case 3: return [2 /*return*/];
             }
         });
     });
 }
 function filterCompletedRewards(uid, rewards) {
     return __awaiter(this, void 0, void 0, function () {
-        var data, userRewards;
+        var data, userRewards_1, err_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db.getSortedSetRangeByScoreWithScores("uid:".concat(uid, ":rewards"), 0, -1, 1, '+inf')];
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, db.getSortedSetRangeByScoreWithScores("uid:".concat(uid, ":rewards"), 0, -1, 1, '+inf')];
                 case 1:
                     data = _a.sent();
-                    userRewards = {};
+                    userRewards_1 = {};
                     data.forEach(function (obj) {
-                        userRewards[obj.value] = parseInt(obj.score, 10);
+                        userRewards_1[obj.value] = parseInt(obj.score, 10);
                     });
                     return [2 /*return*/, rewards.filter(function (reward) {
                             if (!reward) {
                                 return false;
                             }
                             var claimable = parseInt(reward.claimable, 10);
-                            return claimable === 0 || (!userRewards[reward.id] || userRewards[reward.id] < claimable);
+                            return claimable === 0 || (!userRewards_1[reward.id] || userRewards_1[reward.id] < claimable);
                         })];
+                case 2:
+                    err_3 = _a.sent();
+                    console.error('Error filtering completed rewards: ', err_3);
+                    return [2 /*return*/, []];
+                case 3: return [2 /*return*/];
             }
         });
     });
 }
 function getRewardDataByIDs(ids) {
     return __awaiter(this, void 0, void 0, function () {
-        var rewardsData;
+        var rewardsData, err_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db.getObjects(ids.map(function (id) { return "rewards:id:".concat(id); }))];
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, db.getObjects(ids.map(function (id) { return "rewards:id:".concat(id); }))];
                 case 1:
                     rewardsData = _a.sent();
                     return [2 /*return*/, rewardsData];
+                case 2:
+                    err_4 = _a.sent();
+                    console.error('Error in getRewardDataByIDs: ', err_4);
+                    return [2 /*return*/, []];
+                case 3: return [2 /*return*/];
             }
         });
     });
 }
 function getRewardsByRewardData(rewards) {
     return __awaiter(this, void 0, void 0, function () {
-        var rewardObjects;
+        var rewardObjects, err_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db.getObjects(rewards.map(function (reward) { return "rewards:id:".concat(reward.id, ":rewards"); }))];
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, db.getObjects(rewards.map(function (reward) { return "rewards:id:".concat(reward.id, ":rewards"); }))];
                 case 1:
                     rewardObjects = _a.sent();
                     return [2 /*return*/, rewardObjects];
+                case 2:
+                    err_5 = _a.sent();
+                    console.error('Error in getRewardsByRewardData: ', err_5);
+                    return [2 /*return*/, []];
+                case 3: return [2 /*return*/];
             }
         });
     });
 }
 function checkCondition(reward, method) {
     return __awaiter(this, void 0, void 0, function () {
-        var value, bool;
+        var value, bool, err_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    _a.trys.push([0, 3, , 4]);
                     if (method.constructor && method.constructor.name !== 'AsyncFunction') {
                         method = util.promisify(method);
                     }
@@ -132,39 +168,54 @@ function checkCondition(reward, method) {
                 case 2:
                     bool = _a.sent();
                     return [2 /*return*/, bool];
+                case 3:
+                    err_6 = _a.sent();
+                    console.error("Error in checkCondition for reward ".concat(reward.id, ":"), err_6);
+                    return [2 /*return*/, false];
+                case 4: return [2 /*return*/];
             }
         });
     });
 }
 function giveRewards(uid, rewards) {
     return __awaiter(this, void 0, void 0, function () {
-        var rewardData, i;
+        var rewardData;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, getRewardsByRewardData(rewards)];
                 case 1:
                     rewardData = _a.sent();
-                    i = 0;
-                    _a.label = 2;
+                    // Ejecutar en paralelo las operaciones de dar premios
+                    return [4 /*yield*/, Promise.all(rewards.map(function (reward, i) { return __awaiter(_this, void 0, void 0, function () {
+                            var err_7;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        _a.trys.push([0, 3, , 4]);
+                                        return [4 /*yield*/, plugins.hooks.fire("action:rewards.award:".concat(reward.id), {
+                                                uid: uid,
+                                                rewardData: reward,
+                                                reward: rewardData[i],
+                                            })];
+                                    case 1:
+                                        _a.sent();
+                                        return [4 /*yield*/, db.sortedSetIncrBy("uid:".concat(uid, ":rewards"), 1, reward.id)];
+                                    case 2:
+                                        _a.sent();
+                                        return [3 /*break*/, 4];
+                                    case 3:
+                                        err_7 = _a.sent();
+                                        console.error("Error awarding reward ".concat(reward.id, ":"), err_7);
+                                        return [3 /*break*/, 4];
+                                    case 4: return [2 /*return*/];
+                                }
+                            });
+                        }); }))];
                 case 2:
-                    if (!(i < rewards.length)) return [3 /*break*/, 6];
-                    /* eslint-disable no-await-in-loop */
-                    return [4 /*yield*/, plugins.hooks.fire("action:rewards.award:".concat(rewards[i].id), {
-                            uid: uid,
-                            rewardData: rewards[i],
-                            reward: rewardData[i],
-                        })];
-                case 3:
-                    /* eslint-disable no-await-in-loop */
+                    // Ejecutar en paralelo las operaciones de dar premios
                     _a.sent();
-                    return [4 /*yield*/, db.sortedSetIncrBy("uid:".concat(uid, ":rewards"), 1, rewards[i].id)];
-                case 4:
-                    _a.sent();
-                    _a.label = 5;
-                case 5:
-                    i++;
-                    return [3 /*break*/, 2];
-                case 6: return [2 /*return*/];
+                    return [2 /*return*/];
             }
         });
     });
@@ -177,34 +228,41 @@ var rewards = {
                 switch (_a.label) {
                     case 0:
                         uid = params.uid, condition = params.condition, method = params.method;
+                        console.log('Starting to check condition for user:', uid);
                         return [4 /*yield*/, isConditionActive(condition)];
                     case 1:
                         isActive = _a.sent();
+                        console.log('Condition active:', isActive);
                         if (!isActive) {
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, getIDsByCondition(condition)];
                     case 2:
                         ids = _a.sent();
+                        console.log('Condition IDs retrieved:', ids);
                         return [4 /*yield*/, getRewardDataByIDs(ids)];
                     case 3:
                         rewardData = _a.sent();
                         // Filtrar los deshabilitados
                         rewardData = rewardData.filter(function (r) { return r && !(r.disabled === 'true' || r.disabled === true); });
+                        console.log('Filtered disabled rewards:', rewardData);
                         return [4 /*yield*/, filterCompletedRewards(uid, rewardData)];
                     case 4:
                         rewardData = _a.sent();
                         if (!rewardData || !rewardData.length) {
+                            console.log('No eligible rewards left after filtering completed rewards.');
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, Promise.all(rewardData.map(function (reward) { return checkCondition(reward, method); }))];
                     case 5:
                         eligible = _a.sent();
                         eligibleRewards = rewardData.filter(function (reward, index) { return eligible[index]; });
+                        if (!(eligibleRewards.length > 0)) return [3 /*break*/, 7];
                         return [4 /*yield*/, giveRewards(uid, eligibleRewards)];
                     case 6:
                         _a.sent();
-                        return [2 /*return*/];
+                        _a.label = 7;
+                    case 7: return [2 /*return*/];
                 }
             });
         });
