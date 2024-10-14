@@ -195,8 +195,8 @@ async function getTopics(tids: number[], data: ISearchData): Promise<ITopic[]> {
 		if (topic && categories && cidToCategory[topic.cid]) {
 			topic.category = cidToCategory[topic.cid];
 		}
-		if (topic?.tags) {
-			topic.tags = topic.tags.map((tag: ITag) => tag?.value);
+		if (Array.isArray(topic.tags) && topic.tags.length > 0 && typeof topic.tags[0] !== 'string') {
+			topic.tags = (topic.tags as ITag[]).map((tag: ITag) => tag.value);
 		}
 	});
 
@@ -237,11 +237,11 @@ async function getMatchedPosts(pids: number[], data: ISearchData): Promise<IPost
 
 async function filterAndSort(pids: number[], data: ISearchData): Promise<number[]> {
 	if (data.sortBy === 'relevance' &&
-        !data.replies &&
-        !data.timeRange &&
-        !data.hasTags &&
-        data.searchIn !== 'bookmarks' &&
-        !plugins.hooks.hasListeners('filter:search.filterAndSort')) {
+		!data.replies &&
+		!data.timeRange &&
+		!data.hasTags &&
+		data.searchIn !== 'bookmarks' &&
+		!plugins.hooks.hasListeners('filter:search.filterAndSort')) {
 		return pids;
 	}
 	let postsData = await getMatchedPosts(pids, data);
