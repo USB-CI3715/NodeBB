@@ -1,82 +1,71 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-// import type { RedisClientType } from 'redis';
+import { RedisClientType } from 'redis';
+import type { RedisCommandArgument as RedisCommandArg } from '@redis/client/dist/lib/commands';
 import { execBatch } from './helpers';
 
-interface Module {
-    client: any;
-    listPrepend(key: string, value: any): Promise<void>;
-    listAppend(key: string, value: any): Promise<void>;
-    listRemoveLast(key: string): Promise<any>;
-    listRemoveAll(key: string, value: any): Promise<void>;
-    listTrim(key: string, start: number, stop: number): Promise<void>;
-    getListRange(key: string, start: number, stop: number): Promise<any>;
-    listLength(key: string): Promise<number>;
+interface RedisModule {
+    client: RedisClientType;
+    listPrepend?: (key: string, value: RedisCommandArg) => Promise<void>;
+    listAppend?: (key: string, value: RedisCommandArg) => Promise<void>;
+    listRemoveLast?: (key: string) => Promise<RedisCommandArg | null>;
+    listRemoveAll?: (key: string, value: RedisCommandArg | RedisCommandArg[]) => Promise<void>;
+    listTrim?: (key: string, start: number, stop: number) => Promise<void>;
+    getListRange?: (key: string, start: number, stop: number) => Promise<RedisCommandArg[]>;
+    listLength?: (key: string) => Promise<number>;
 }
 
-module.exports = function (module: Module) {
-	module.listPrepend = async function (key: string, value: any): Promise<void> {
+module.exports = function (module: RedisModule) {
+	module.listPrepend = async function (key: string, value: RedisCommandArg): Promise<void> {
 		if (!key) {
 			return;
 		}
-		await module.client.lpush(key, value);
+		await module.client.lPush(key, value);
 	};
 
-
-	module.listAppend = async function (key: string, value: any): Promise<void> {
+	module.listAppend = async function (key: string, value: RedisCommandArg): Promise<void> {
 		if (!key) {
 			return;
 		}
-		await module.client.rpush(key, value);
+		await module.client.rPush(key, value);
 	};
 
-
-	module.listRemoveLast = async function (key: string): Promise<any> {
+	module.listRemoveLast = async function (key: string): Promise<RedisCommandArg | null> {
 		if (!key) {
-			return;
+			return null;
 		}
-		const result = await module.client.rpop(key);
-		return result;
+		return await module.client.rPop(key);
 	};
 
-
-	module.listRemoveAll = async function (key: string, value: any): Promise<void> {
+	module.listRemoveAll = async function (key: string, value: RedisCommandArg | RedisCommandArg[]): Promise<void> {
 		if (!key) {
 			return;
 		}
 		if (Array.isArray(value)) {
-			const batch = module.client.batch();
-			value.forEach(value => batch.lRem(key, 0, value));
+			const batch = module.client.multi();
+			value.forEach(val => batch.lRem(key, 0, val));
 			await execBatch(batch);
 		} else {
 			await module.client.lRem(key, 0, value);
 		}
 	};
 
-
 	module.listTrim = async function (key: string, start: number, stop: number): Promise<void> {
 		if (!key) {
 			return;
 		}
-		await module.client.ltrim(key, start, stop);
+		await module.client.lTrim(key, start, stop);
 	};
 
-
-	module.getListRange = async function (key: string, start: number, stop: number): Promise<any> {
+	module.getListRange = async function (key: string, start: number, stop: number): Promise<RedisCommandArg[]> {
 		if (!key) {
-			return;
+			return [];
 		}
-		const result = await module.client.lrange(key, start, stop);
-		return result;
+		return await module.client.lRange(key, start, stop);
 	};
-
 
 	module.listLength = async function (key: string): Promise<number> {
-		return await module.client.llen(key);
+		return await module.client.lLen(key);
 	};
 };
