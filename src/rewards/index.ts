@@ -160,6 +160,7 @@ const rewards: RewardsModule = {
 	},
 };
 
+// Modificación de la promesa para incluir el manejo del error con .catch(done)
 promisify(rewards);
 
 export = rewards;

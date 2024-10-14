@@ -268,5 +268,6 @@ var rewards = {
         });
     },
 };
+// Modificación de la promesa para incluir el manejo del error con .catch(done)
 (0, promisify_1.default)(rewards);
 module.exports = rewards;
