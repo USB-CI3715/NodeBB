@@ -369,7 +369,9 @@ search.search = async function (data: ISearchData) {
 
 	result.time = (utils.elapsedTimeSince(start) / 1000).toFixed(2);
 	return result;
-}
+};
 
 promisify(search);
 export default search;
+
+

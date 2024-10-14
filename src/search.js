@@ -25,6 +25,8 @@ const privileges_1 = __importDefault(require("./privileges"));
 const topics_1 = __importDefault(require("./topics"));
 const user_1 = __importDefault(require("./user"));
 const utils_1 = __importDefault(require("./utils"));
+const promisify_1 = require("./promisify");
+const search = {};
 function getWatchedCids(data) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!data.categories.includes('watched')) {
@@ -325,34 +327,34 @@ function searchInContent(data) {
         return Object.assign(returnData, metadata);
     });
 }
-exports.default = {
-    search: function (data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const start = process.hrtime();
-            data.sortBy = data.sortBy || 'relevance';
-            let result;
-            if (['posts', 'titles', 'titlesposts', 'bookmarks'].includes(data.searchIn)) {
-                result = yield searchInContent(data);
-            }
-            else if (data.searchIn === 'users') {
-                result = yield user_1.default.search(data);
-            }
-            else if (data.searchIn === 'categories') {
-                result = yield categories_1.default.search(data);
-            }
-            else if (data.searchIn === 'tags') {
-                result = yield topics_1.default.searchAndLoadTags(data);
-            }
-            else if (data.searchIn) {
-                result = yield plugins_1.default.hooks.fire('filter:search.searchIn', {
-                    data,
-                });
-            }
-            else {
-                throw new Error('[[error:unknown-search-filter]]');
-            }
-            result.time = (utils_1.default.elapsedTimeSince(start) / 1000).toFixed(2);
-            return result;
-        });
-    },
+search.search = function (data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const start = process.hrtime();
+        data.sortBy = data.sortBy || 'relevance';
+        let result;
+        if (['posts', 'titles', 'titlesposts', 'bookmarks'].includes(data.searchIn)) {
+            result = yield searchInContent(data);
+        }
+        else if (data.searchIn === 'users') {
+            result = yield user_1.default.search(data);
+        }
+        else if (data.searchIn === 'categories') {
+            result = yield categories_1.default.search(data);
+        }
+        else if (data.searchIn === 'tags') {
+            result = yield topics_1.default.searchAndLoadTags(data);
+        }
+        else if (data.searchIn) {
+            result = yield plugins_1.default.hooks.fire('filter:search.searchIn', {
+                data,
+            });
+        }
+        else {
+            throw new Error('[[error:unknown-search-filter]]');
+        }
+        result.time = (utils_1.default.elapsedTimeSince(start) / 1000).toFixed(2);
+        return result;
+    });
 };
+(0, promisify_1.promisify)(search);
+exports.default = search;
