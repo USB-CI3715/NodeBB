@@ -1,9 +1,9 @@
 /* eslint-disable import/no-import-module-exports */
 import * as _ from 'lodash';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as plugins from '../meta';
+import * as plugins from '../plugins';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-import * as meta from '../plugins';
+import * as meta from '../meta';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 import * as db from '../database';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -154,8 +154,9 @@ module.exports = function (Messaging: Messaging) {
 		}
 
 		messages[0].newSet = isNewSet;
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-		plugins.hooks.fire('action:messaging.save', { message: message, data: data });
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+		await plugins.hooks.fire('action:messaging.save', { message: message, data: data });
 		return messages[0];
 	};
 

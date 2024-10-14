@@ -35,9 +35,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable import/no-import-module-exports */
 const _ = __importStar(require("lodash"));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const plugins = __importStar(require("../meta"));
+const plugins = __importStar(require("../plugins"));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const meta = __importStar(require("../plugins"));
+const meta = __importStar(require("../meta"));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const db = __importStar(require("../database"));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -143,8 +143,9 @@ module.exports = function (Messaging) {
             return null;
         }
         messages[0].newSet = isNewSet;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        plugins.hooks.fire('action:messaging.save', { message: message, data: data });
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+        yield plugins.hooks.fire('action:messaging.save', { message: message, data: data });
         return messages[0];
     });
     Messaging.addSystemMessage = (content, uid, roomId) => __awaiter(this, void 0, void 0, function* () {
