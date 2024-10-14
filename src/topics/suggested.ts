@@ -39,7 +39,10 @@ export default function Suggested(Topics: TopicsType) {
 		return _.shuffle(_.uniq(tids.filter(_tid => _tid !== tid))).slice(0, 10) as string[];
 	}
 
-	async function getSearchTids(tid: string, title: string, cid: string, cutoff: number): Promise<string[]> {
+	async function getSearchTids(
+		tid: string, title: string, cid: string, cutoff: number,
+		uid: string
+	): Promise<string[]> {
 		let { ids: tids } = await plugins.hooks.fire('filter:search.query', {
 			index: 'topic',
 			content: title,
@@ -51,7 +54,7 @@ export default function Suggested(Topics: TopicsType) {
 
 		tids = tids.filter(_tid => _tid !== tid);
 		if (cutoff) {
-			const topicData = await Topics.getTopicsByTids(tids, '');
+			const topicData = await Topics.getTopicsByTids(tids, uid);
 			const now = Date.now();
 			tids = topicData.filter(t => t && t.timestamp > now - cutoff).map(t => t.tid);
 		}
@@ -82,7 +85,7 @@ export default function Suggested(Topics: TopicsType) {
 
 		const [tagTids, searchTids] = await Promise.all([
 			getTidsWithSameTags(tid, tags.map(t => t.value), cutoff),
-			getSearchTids(tid, title, cid, cutoff),
+			getSearchTids(tid, title, cid, cutoff, uid),
 		]);
 
 		let tids = _.uniq([...tagTids, ...searchTids]) as string[];

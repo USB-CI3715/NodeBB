@@ -29,7 +29,7 @@ function Suggested(Topics) {
             return lodash_1.default.shuffle(lodash_1.default.uniq(tids.filter(_tid => _tid !== tid))).slice(0, 10);
         });
     }
-    function getSearchTids(tid, title, cid, cutoff) {
+    function getSearchTids(tid, title, cid, cutoff, uid) {
         return __awaiter(this, void 0, void 0, function* () {
             let { ids: tids } = yield plugins_1.default.hooks.fire('filter:search.query', {
                 index: 'topic',
@@ -41,7 +41,7 @@ function Suggested(Topics) {
             });
             tids = tids.filter(_tid => _tid !== tid);
             if (cutoff) {
-                const topicData = yield Topics.getTopicsByTids(tids, '');
+                const topicData = yield Topics.getTopicsByTids(tids, uid);
                 const now = Date.now();
                 tids = topicData.filter(t => t && t.timestamp > now - cutoff).map(t => t.tid);
             }
@@ -65,7 +65,7 @@ function Suggested(Topics) {
             const { cid, title, tags } = yield Topics.getTopicFields(tid, ['cid', 'title', 'tags']);
             const [tagTids, searchTids] = yield Promise.all([
                 getTidsWithSameTags(tid, tags.map(t => t.value), cutoff),
-                getSearchTids(tid, title, cid, cutoff),
+                getSearchTids(tid, title, cid, cutoff, uid),
             ]);
             let tids = lodash_1.default.uniq([...tagTids, ...searchTids]);
             let categoryTids = [];
