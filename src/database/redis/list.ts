@@ -18,14 +18,6 @@ interface RedisModule {
 
 const client = new Redis();
 
-client.on('error', err => console.log('Redis Client Error', err));
-
-(async () => {
-	await client.connect();
-	console.log('Redis client connected');
-	console.log(client);
-})().catch(err => console.error('Error initializing Redis client:', err));
-
 module.exports = function (module: RedisModule) {
 	module.client = client;
 
