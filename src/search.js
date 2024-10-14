@@ -14,7 +14,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const batch_1 = __importDefault(require("./batch"));
 const categories_1 = __importDefault(require("./categories"));
@@ -358,4 +357,4 @@ const search = {
     },
 };
 (0, promisify_1.default)(search);
-exports.default = search;
+module.exports = search;
