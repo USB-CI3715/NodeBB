@@ -151,3 +151,5 @@ function createPosts(Posts: Post) {
 		return result.post;
 	};
 }
+
+module.exports = createPosts;
