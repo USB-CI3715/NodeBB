@@ -16,4 +16,5 @@ export interface ISearchData {
     repliesFilter?: string,
     timeFilter?: string,
     postedBy?: string
-};
+}
+
