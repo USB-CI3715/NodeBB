@@ -57,7 +57,7 @@ module.exports = function (Messaging: Messaging) {
 		}
 		// eslint-disable-next-line max-len
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-		const maximumChatMessageLength = meta.config.maximumChatMessageLength || 1000;
+		const maximumChatMessageLength: number = meta.config.maximumChatMessageLength || 1000;
 		content = String(content).trim();
 		let { length } = content;
 		// eslint-disable-next-line max-len
