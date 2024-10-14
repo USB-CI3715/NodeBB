@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { RedisClientType } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 import type { RedisCommandArgument as RedisCommandArg } from '@redis/client/dist/lib/commands';
 import { execBatch } from './helpers';
 
@@ -16,7 +16,17 @@ interface RedisModule {
     listLength?: (key: string) => Promise<number>;
 }
 
+const client: RedisClientType = createClient();
+
+client.on('error', err => console.log('Redis Client Error', err));
+
+(async () => {
+	await client.connect();
+})().catch(err => console.error('Error initializing Redis client:', err));
+
 module.exports = function (module: RedisModule) {
+	module.client = client;
+
 	module.listPrepend = async function (key: string, value: RedisCommandArg): Promise<void> {
 		if (!key) {
 			return;
