@@ -93,6 +93,7 @@ interface PostsModule {
 	getPostData(pid: number | string): Promise<PostData>;
 	setPostFields(pid: number | string, data: Partial<PostData>): Promise<void>;
 	diffs: {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		save(diffData: any): Promise<void>;
 	};
 	uploads: {
@@ -329,11 +330,13 @@ module.exports = function (Posts: PostsModule) {
 			editMainPost(data, postData, topicData),
 		]);
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		/* eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any,
+		 @typescript-eslint/no-unsafe-member-access
+		*/
 		await Posts.setPostFields(data.pid, pluginResult.post);
 		const contentChanged =
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		data.content !== oldContent || topic.renamed || topic.tagsupdated;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+			data.content !== oldContent || topic.renamed || topic.tagsupdated;
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 		if (meta.config.enablePostHistory === 1 && contentChanged) {
 			await Posts.diffs.save({
@@ -402,4 +405,4 @@ module.exports = function (Posts: PostsModule) {
 			post: returnPostData,
 		};
 	};
-}
+};

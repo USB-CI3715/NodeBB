@@ -194,7 +194,9 @@ module.exports = function (Posts) {
                 user.getUserFields(data.uid, ['username', 'userslug']),
                 editMainPost(data, postData, topicData),
             ]);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            /* eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any,
+             @typescript-eslint/no-unsafe-member-access
+            */
             yield Posts.setPostFields(data.pid, pluginResult.post);
             const contentChanged = 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
